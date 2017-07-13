@@ -120,7 +120,7 @@ func NetlinkMessageToStruct(buf []byte) (*syscall.NlMsghdr, []byte, error) {
 	return hdr, buf[8:], nil
 }
 
-//NetlinkMessageToNfGenStruct -- Convert netlink byte slice to nfqgen msg structure
+//NetlinkMessageToNfGenStruct -- Convert netlink byte slice to nfgen msg structure
 func NetlinkMessageToNfGenStruct(buf []byte) (*NfGenMsg, []byte, error) {
 	hdr := &NfGenMsg{}
 	hdr.NfgenFamily = buf[0]

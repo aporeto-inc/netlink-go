@@ -33,12 +33,12 @@ func TestMark(t *testing.T) {
 			})
 
 			Convey("Given I try to update mark for given attributes", func() {
-				handle.ConntrackTableUpdate(1, result, "10.0.2.2", "10.0.2.15", 6, 53341, 22, 18)
+				handle.ConntrackTableUpdate(1, result, "10.0.2.15", "10.0.2.2", 6, 22, 53341, 25)
 
 				Convey("I should see one entry mark to be updated", func() {
 					resultFin, _ := handle.ConntrackTableList(ConntrackTable)
 					for i, _ := range resultFin {
-						if resultFin[i].Mark == 18 {
+						if resultFin[i].Mark == 25 {
 							mark++
 						}
 					}

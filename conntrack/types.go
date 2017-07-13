@@ -5,7 +5,7 @@ import (
 	"syscall"
 )
 
-//NfqGenMsg -- the nfgen msg structure
+//NfGenMsg -- the nfgen msg structure
 //nfGenFamily -- Family
 //version -- netlink version
 //resId -- queueNum in big endian format
@@ -47,7 +47,7 @@ type NfAttrResponsePayload struct {
 	data []byte
 }
 
-//NfqSockHandle -- Sock handle of netlink socket
+//SockHandle -- Sock handle of netlink socket
 //fd -- fd of socket
 //rcvbufSize -- rcv buffer Size
 //lsa -- local address

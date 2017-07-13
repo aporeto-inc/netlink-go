@@ -137,11 +137,11 @@ func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows [
 		nfgenTupleIpAttr := BuildNfAttrMsg(NLA_F_NESTED|CTA_TUPLE_IP, SizeOfNestedTupleIP)
 		nfgenTupleIpV4SrcAttr := BuildNfAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
 		nfgenTupleIpV4DstAttr := BuildNfAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
-		nfgenTupleProto := BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_PROTO, hdr, SizeOfNestedTupleProto)
+		nfgenTupleProto := BuildNfAttrMsg(NLA_F_NESTED|CTA_TUPLE_PROTO, SizeOfNestedTupleProto)
 		nfgenTupleProtoNum := BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, int(protoNum.Length()))
 		nfgenTupleSrcPort := BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
 		nfgenTupleDstPort := BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, int(dstPort.Length()))
-		nfgenMark := BuildNfAttrMsg(CTA_MARK, int(mark.Length()))
+		nfgenMark := BuildNfNestedAttrMsg(CTA_MARK, hdr, int(mark.Length()))
 
 		nfgendata := nfgen.ToWireFormat()
 		nfgendata = append(nfgendata, nfgenTupleOrigAttr.ToWireFormat()...)
@@ -160,8 +160,6 @@ func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows [
 		nfgendata = append(nfgendata, nfgenMark.ToWireFormat()...)
 		nfgendata = append(nfgendata, mark.ToWireFormat()...)
 
-		// WILL TAKE A LOOK AT THIS
-		hdr.Len = 80
 		netlinkMsg := &syscall.NetlinkMessage{
 			Header: *hdr,
 			Data:   nfgendata,
@@ -247,6 +245,7 @@ func parseRawData(data []byte) *ConntrackFlow {
 		}
 	}
 
+	//skip to the mark type
 	reader.Seek(64, seekCurrent)
 
 	_, t, _, v := parseNfAttrTLV(reader)
