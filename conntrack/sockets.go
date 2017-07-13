@@ -8,12 +8,10 @@ import (
 )
 
 func (sh *SockHandles) open() error {
-
 	fd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
 		return err
 	}
-
 	sh.fd = fd
 	sh.rcvbufSize = NfnlBuffSize
 	sh.lsa.Family = syscall.AF_NETLINK
@@ -22,13 +20,6 @@ func (sh *SockHandles) open() error {
 	if err != nil {
 		return err
 	}
-
-	opt := 1
-	sockrcvbuf := 500 * int(NfnlBuffSize)
-	syscall.SetsockoptInt(fd, SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt)
-	syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf)
-	syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf)
-
 	return nil
 }
 
@@ -42,20 +33,17 @@ func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {
 
 func (sh *SockHandles) recv() error {
 	buf := sh.buf
-	fmt.Println(buf)
 	n, _, err := syscall.Recvfrom(sh.fd, buf, 0)
-
 	if err != nil {
 		return fmt.Errorf("Recvfrom returned error %v", err)
 	}
 
 	hdr, next, err := NetlinkMessageToStruct(buf[:n])
-
 	if err != nil {
 		return err
 	}
 
-	if hdr.Type == NlMsgError {
+	if hdr.Type == syscall.NLMSG_ERROR {
 		_, err := NetlinkErrMessagetoStruct(next)
 		if err.Error != 0 {
 			return fmt.Errorf("Netlink Returned errror %d", err.Error)
@@ -66,22 +54,18 @@ func (sh *SockHandles) recv() error {
 	if err != nil {
 		return fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
-
 	return nil
-
 }
 
 func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	sh.buf = buf
-
 	NativeEndian().PutUint32(buf[0:4], msg.Header.Len)
 	NativeEndian().PutUint16(buf[4:6], msg.Header.Type)
 	NativeEndian().PutUint16(buf[6:8], msg.Header.Flags)
 	NativeEndian().PutUint32(buf[8:12], msg.Header.Seq)
 	NativeEndian().PutUint32(buf[12:16], msg.Header.Pid)
 	copy(buf[16:], msg.Data)
-
 	return syscall.Sendto(sh.fd, buf, 0, &sh.lsa)
 }
 
@@ -91,7 +75,6 @@ func (sh *SockHandles) getFd() int {
 
 func (sh *SockHandles) getRcvBufSize() uint32 {
 	return sh.rcvbufSize
-
 }
 
 func (sh *SockHandles) getLocalAddress() syscall.SockaddrNetlink {
@@ -108,5 +91,4 @@ func NativeEndian() binary.ByteOrder {
 		return binary.BigEndian
 	}
 	return binary.LittleEndian
-
 }

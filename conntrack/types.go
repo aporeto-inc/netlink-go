@@ -3,49 +3,54 @@ package conntrack
 import (
 	"net"
 	"syscall"
-
-	"github.com/vishvananda/netlink/nl"
 )
 
-type msgTypes int
-type nfqaAttr int
-type nfqConfigCommands uint8
-type nfqConfigMode int
-
-//NlmFlags -- The flags passed to NlMsgHdr
-type NlmFlags uint32
-
-type NfqGenMsg struct {
+//NfqGenMsg -- the nfgen msg structure
+//nfGenFamily -- Family
+//version -- netlink version
+//resId -- queueNum in big endian format
+type NfGenMsg struct {
 	NfgenFamily uint8
 	Version     uint8
 	ResID       uint16
 }
 
-type NfValue32 struct {
-	Value uint32
-}
-
+//NfValue8 -- uint8 type attribute structure
+//value -- the value for a uint8 type attribute
 type NfValue8 struct {
-	Value uint8
+	value uint8
 }
 
+//NfValue16 -- uint16 type attribute structure
+//value -- the value for a uint16 type attribute
 type NfValue16 struct {
-	Value uint16
+	value uint16
 }
 
-type conntrackMarkHdr struct {
-	mark uint32
+//NfValue32 -- uint32 type attribute structure
+//value -- the value for a uint32 type attribute
+type NfValue32 struct {
+	value uint32
 }
 
+//NfAttr -- attr struct header
+//nfaLen -- sizeof struct + payload
+//nfaType --  nfaType
 type NfAttr struct {
 	nfaLen  uint16
 	nfaType uint16
 }
 
+//NfAttrResponsePayload -- Response of attr from netlink
+//data -- payload for response
 type NfAttrResponsePayload struct {
 	data []byte
 }
 
+//NfqSockHandle -- Sock handle of netlink socket
+//fd -- fd of socket
+//rcvbufSize -- rcv buffer Size
+//lsa -- local address
 type SockHandles struct {
 	fd         int
 	rcvbufSize uint32
@@ -53,14 +58,13 @@ type SockHandles struct {
 	lsa        syscall.SockaddrNetlink
 }
 
+//Handles -- Handle for Conntrack table manipulations (get/set)
+//SockHandles --  Sock handle of netlink socket
 type Handles struct {
-	NfValue32
-	NfValue8
-	NfValue16
 	SockHandles
-	sockets map[int]*nl.SocketHandle
 }
 
+// ipTuple -- Conntrack flow structure for ipTuple
 type ipTuple struct {
 	SrcIP    net.IP
 	DstIP    net.IP
@@ -69,8 +73,11 @@ type ipTuple struct {
 	DstPort  uint16
 }
 
+//ConntrackFlow -- ConntrackFlow for parsing
+//http://git.netfilter.org/libnetfilter_conntrack/tree/include/internal/object.h
 type ConntrackFlow struct {
 	FamilyType uint8
 	Forward    ipTuple
 	Reverse    ipTuple
+	Mark       uint32
 }

@@ -6,14 +6,17 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
+// Conntrack interface has Conntrack manipulations (get/set/flush)
 type Conntrack interface {
-	ConntrackTableList(table netlink.ConntrackTableType, family netlink.InetFamily) ([]*netlink.ConntrackFlow, error)
-	ConntrackTableUpdate()
+	// ConntrackTableList is used to retrieve the conntrack entries from kernel
+	ConntrackTableList(table netlink.ConntrackTableType) ([]*ConntrackFlow, error)
+	// ConntrackTableFlush is used to flush the conntrack entries
 	ConntrackTableFlush(table netlink.ConntrackTableType) error
-	ConntrackTableDelete()
+	// ConntrackTableUpdate is used to update conntrack attributes in the kernel. (Currently supports only mark)
+	ConntrackTableUpdate(table netlink.ConntrackTableType, flows []*ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) error
 }
 
-//SockHandle Opaque interface with unexported functions
+// SockHandle Opaque interface with unexported functions
 type SockHandle interface {
 	query(msg *syscall.NetlinkMessage) error
 	recv() error
