@@ -8,17 +8,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// func init() {
-// 	handles := NewHandle()
-// 	result, _ := handles.ConntrackTableList(ConntrackTable)
-// 	err := handles.ConntrackTableUpdate(ConntrackTable, result, "10.0.2.2", "10.0.2.15", 6, 49486, 22, 20)
-// 	fmt.Println(err)
-// 	resultFin, _ := handles.ConntrackTableList(ConntrackTable)
-// 	for i, _ := range resultFin {
-// 		fmt.Println(resultFin[i])
-// 	}
-// }
-
 func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) {
 	for i := 0; i < flows; i++ {
 		ServerAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dstIP, dstPort))
@@ -41,7 +30,7 @@ func TestMark(t *testing.T) {
 		Convey("Given I try to flush the entries from conntrack", func() {
 			err := handle.ConntrackTableFlush(ConntrackTable)
 
-			Convey("I should not gen any error", func() {
+			Convey(" Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
 		})
@@ -49,20 +38,20 @@ func TestMark(t *testing.T) {
 		//udpFlows -- 5
 		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
-		Convey("Given I retrieve Conntrack table entries through netlink socket", func() {
+		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(ConntrackTable)
 
-			Convey("I should not gen any error", func() {
+			Convey("Then I should not get any error", func() {
 				So(result, ShouldNotBeNil)
 				So(err, ShouldBeNil)
 			})
 
 			Convey("Given I try to update mark for given attributes", func() {
 				for i := 0; i < 5; i++ {
-					handle.ConntrackTableUpdate(1, result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 50)
+					handle.ConntrackTableUpdate(ConntrackTable, result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 50)
 				}
 
-				Convey("I should see 5 mark entries to be updated", func() {
+				Convey("Then I should see 5 mark entries to be updated", func() {
 					resultFin, _ := handle.ConntrackTableList(ConntrackTable)
 					for i, _ := range resultFin {
 						if resultFin[i].Mark == 50 {
@@ -70,6 +59,42 @@ func TestMark(t *testing.T) {
 						}
 					}
 					So(mark, ShouldEqual, 5)
+				})
+			})
+		})
+	})
+}
+
+func TestFlush(t *testing.T) {
+
+	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
+		handle := NewHandle()
+
+		//udpFlows -- 5
+		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+
+		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
+			result, err := handle.ConntrackTableList(ConntrackTable)
+
+			Convey("Then I should not get any error", func() {
+				So(result, ShouldNotBeNil)
+				So(err, ShouldBeNil)
+			})
+		})
+
+		Convey("Given I try to flush the entries from conntrack", func() {
+			err := handle.ConntrackTableFlush(ConntrackTable)
+
+			Convey("Then I should not get any error", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Given I try to retrieve Conntrack table entries again after flushing through netlink socket", func() {
+				result, err := handle.ConntrackTableList(ConntrackTable)
+
+				Convey("Then the conntrack table should be empty and I should get error", func() {
+					So(result, ShouldBeNil)
+					So(err, ShouldNotBeNil)
 				})
 			})
 		})

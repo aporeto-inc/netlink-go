@@ -31,6 +31,9 @@ func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*Connt
 	for _, dataRaw := range res {
 		result = append(result, parseRawData(dataRaw))
 	}
+	if result == nil {
+		return nil, fmt.Errorf("No conntrack entries")
+	}
 
 	return result, nil
 }
