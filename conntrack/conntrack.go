@@ -223,7 +223,7 @@ func (h *Handles) newNetlinkRequest(proto, flags int) *nl.NetlinkRequest {
 
 func parseRawData(data []byte) *ConntrackFlow {
 	s := &ConntrackFlow{}
-
+	var proto uint8
 	reader := bytes.NewReader(data)
 	binary.Read(reader, NativeEndian(), &s.FamilyType)
 
@@ -233,7 +233,7 @@ func parseRawData(data []byte) *ConntrackFlow {
 		nested, t, l := parseNfAttrTL(reader)
 		if nested && t == CTA_TUPLE_ORIG {
 			if nested, t, _ = parseNfAttrTL(reader); nested && t == CTA_TUPLE_IP {
-				parseIpTuple(reader, &s.Forward)
+				proto = parseIpTuple(reader, &s.Forward)
 			}
 		} else if nested && t == CTA_TUPLE_REPLY {
 			if nested, t, _ = parseNfAttrTL(reader); nested && t == CTA_TUPLE_IP {
@@ -246,18 +246,24 @@ func parseRawData(data []byte) *ConntrackFlow {
 	}
 
 	//skip to the mark type
-	reader.Seek(64, seekCurrent)
-
-	_, t, _, v := parseNfAttrTLV(reader)
-	if t == CTA_MARK {
-		s.Mark = uint32(v[3])
+	if proto == 6 {
+		reader.Seek(64, seekCurrent)
+		_, t, _, v := parseNfAttrTLV(reader)
+		if t == CTA_MARK {
+			s.Mark = uint32(v[3])
+		}
+	} else if proto == 17 {
+		reader.Seek(16, seekCurrent)
+		_, t, _, v := parseNfAttrTLV(reader)
+		if t == CTA_MARK {
+			s.Mark = uint32(v[3])
+		}
 	}
 
 	return s
 }
 
-func parseIpTuple(reader *bytes.Reader, tpl *ipTuple) {
-
+func parseIpTuple(reader *bytes.Reader, tpl *ipTuple) uint8 {
 	for i := 0; i < 2; i++ {
 		_, t, _, v := parseNfAttrTLV(reader)
 		switch t {
@@ -288,6 +294,7 @@ func parseIpTuple(reader *bytes.Reader, tpl *ipTuple) {
 
 		reader.Seek(2, seekCurrent)
 	}
+	return tpl.Protocol
 }
 
 func parseNfAttrTLV(r *bytes.Reader) (isNested bool, attrType, len uint16, value []byte) {

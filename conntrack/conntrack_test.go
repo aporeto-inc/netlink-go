@@ -1,6 +1,8 @@
 package conntrack
 
 import (
+	"fmt"
+	"net"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -17,12 +19,35 @@ import (
 // 	}
 // }
 
-//Test to check mark has been updated once
-//Since the tuples have just one entries in the conntrack table
+func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) {
+	for i := 0; i < flows; i++ {
+		ServerAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dstIP, dstPort))
+
+		LocalAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
+
+		Conn, _ := net.DialUDP("udp", LocalAddr, ServerAddr)
+
+		Conn.Write([]byte("Hello World"))
+		Conn.Close()
+	}
+}
+
 func TestMark(t *testing.T) {
 	var mark int
-	Convey("Given I create a new handle", t, func() {
+
+	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
 		handle := NewHandle()
+
+		Convey("Given I try to flush the entries from conntrack", func() {
+			err := handle.ConntrackTableFlush(ConntrackTable)
+
+			Convey("I should not gen any error", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+
+		//udpFlows -- 5
+		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
 		Convey("Given I retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(ConntrackTable)
@@ -33,16 +58,18 @@ func TestMark(t *testing.T) {
 			})
 
 			Convey("Given I try to update mark for given attributes", func() {
-				handle.ConntrackTableUpdate(1, result, "10.0.2.15", "10.0.2.2", 6, 22, 53341, 25)
+				for i := 0; i < 5; i++ {
+					handle.ConntrackTableUpdate(1, result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 50)
+				}
 
-				Convey("I should see one entry mark to be updated", func() {
+				Convey("I should see 5 mark entries to be updated", func() {
 					resultFin, _ := handle.ConntrackTableList(ConntrackTable)
 					for i, _ := range resultFin {
-						if resultFin[i].Mark == 25 {
+						if resultFin[i].Mark == 50 {
 							mark++
 						}
 					}
-					So(mark, ShouldEqual, 1)
+					So(mark, ShouldEqual, 5)
 				})
 			})
 		})
