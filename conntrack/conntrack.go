@@ -14,7 +14,7 @@ import (
 )
 
 // NewHandle which returns interface which implements Conntrack table get/set/flush
-func NewHandle(nlFamilies ...int) Conntrack {
+func NewHandle() Conntrack {
 	return &Handles{Syscalls: syscallwrappers.NewSyscalls()}
 }
 
