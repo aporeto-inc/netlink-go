@@ -5,6 +5,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/aporeto-inc/netlink-go/commons"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -28,7 +29,7 @@ func TestMark(t *testing.T) {
 		handle := NewHandle()
 
 		Convey("Given I try to flush the entries from conntrack", func() {
-			err := handle.ConntrackTableFlush(ConntrackTable)
+			err := handle.ConntrackTableFlush(commons.ConntrackTable)
 
 			Convey(" Then I should not get any error", func() {
 				So(err, ShouldBeNil)
@@ -39,7 +40,7 @@ func TestMark(t *testing.T) {
 		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
-			result, err := handle.ConntrackTableList(ConntrackTable)
+			result, err := handle.ConntrackTableList(commons.ConntrackTable)
 
 			Convey("Then I should not get any error", func() {
 				So(result, ShouldNotBeNil)
@@ -48,13 +49,14 @@ func TestMark(t *testing.T) {
 
 			Convey("Given I try to update mark for given attributes", func() {
 				for i := 0; i < 5; i++ {
-					handle.ConntrackTableUpdate(ConntrackTable, result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 50)
+					fmt.Println(handle.ConntrackTableUpdate(commons.ConntrackTable, result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 65))
 				}
 
 				Convey("Then I should see 5 mark entries to be updated", func() {
-					resultFin, _ := handle.ConntrackTableList(ConntrackTable)
+					resultFin, _ := handle.ConntrackTableList(commons.ConntrackTable)
+
 					for i, _ := range resultFin {
-						if resultFin[i].Mark == 50 {
+						if resultFin[i].Mark == 65 {
 							mark++
 						}
 					}
@@ -74,7 +76,7 @@ func TestFlush(t *testing.T) {
 		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
-			result, err := handle.ConntrackTableList(ConntrackTable)
+			result, err := handle.ConntrackTableList(commons.ConntrackTable)
 
 			Convey("Then I should not get any error", func() {
 				So(result, ShouldNotBeNil)
@@ -83,14 +85,14 @@ func TestFlush(t *testing.T) {
 		})
 
 		Convey("Given I try to flush the entries from conntrack", func() {
-			err := handle.ConntrackTableFlush(ConntrackTable)
+			err := handle.ConntrackTableFlush(commons.ConntrackTable)
 
 			Convey("Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
 
 			Convey("Given I try to retrieve Conntrack table entries again after flushing through netlink socket", func() {
-				result, err := handle.ConntrackTableList(ConntrackTable)
+				result, err := handle.ConntrackTableList(commons.ConntrackTable)
 
 				Convey("Then the conntrack table should be empty and I should get error", func() {
 					So(result, ShouldBeNil)

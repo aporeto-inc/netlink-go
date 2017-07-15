@@ -1,57 +1,14 @@
 package conntrack
 
-import "unsafe"
-
 const (
 	// backward compatibility with golang 1.6 which does not have io.SeekCurrent
 	seekCurrent = 1
-)
-
-const (
-	// ConntrackTable Conntrack table
-	// https://github.com/torvalds/linux/blob/master/include/uapi/linux/netfilter/nfnetlink.h -> #define NFNL_SUBSYS_CTNETLINK		 1
-	ConntrackTable = 1
-	// ConntrackExpectTable Conntrack expect table
-	// https://github.com/torvalds/linux/blob/master/include/uapi/linux/netfilter/nfnetlink.h -> #define NFNL_SUBSYS_CTNETLINK_EXP 2
-	ConntrackExpectTable = 2
-)
-
-// Track the message sizes for the correct serialization/deserialization
-const (
-	SizeofNfgenmsg = 4
-	SizeofNfattr   = 4
 )
 
 var L4ProtoMap = map[uint8]string{
 	6:  "tcp",
 	17: "udp",
 }
-
-// All the following constants are coming from:
-// https://github.com/torvalds/linux/blob/master/include/uapi/linux/netfilter/nfnetlink_conntrack.h
-
-// enum cntl_msg_types {
-// 	IPCTNL_MSG_CT_NEW,
-// 	IPCTNL_MSG_CT_GET,
-// 	IPCTNL_MSG_CT_DELETE,
-// 	IPCTNL_MSG_CT_GET_CTRZERO,
-// 	IPCTNL_MSG_CT_GET_STATS_CPU,
-// 	IPCTNL_MSG_CT_GET_STATS,
-// 	IPCTNL_MSG_CT_GET_DYING,
-// 	IPCTNL_MSG_CT_GET_UNCONFIRMED,
-//
-// 	IPCTNL_MSG_MAX
-// };
-const (
-	IPCTNL_MSG_CT_NEW    = 0
-	IPCTNL_MSG_CT_GET    = 1
-	IPCTNL_MSG_CT_DELETE = 2
-)
-
-// #define NFNETLINK_V0	0
-const (
-	NFNETLINK_V0 = 0
-)
 
 // #define NLA_F_NESTED (1 << 15)
 const (
@@ -178,19 +135,17 @@ const (
 
 const (
 
-	// NfnlBuffSize -- Buffer size of socket
-	NfnlBuffSize uint32 = (75 * 1024)
-
-	SizeOfValue8 uint8 = uint8(unsafe.Sizeof(NfValue8{}))
-
-	SizeOfValue16 uint16 = uint16(unsafe.Sizeof(NfValue16{}))
-
-	SizeOfValue32 uint32 = uint32(unsafe.Sizeof(NfValue32{}))
-
 	//NOTE: THE BELOW VALUES ARE JUST FOR CHANGING MARK. IF NEEDED, THE SIZE HAS TO BE CHANGED WHEN ADDING NEW ATTRIBUTES
-	SizeOfNestedTupleOrig int = 48
+	SizeOfNestedTupleOrig uint32 = 48
 
-	SizeOfNestedTupleIP int = 16
+	SizeOfNestedTupleIP uint32 = 16
 
-	SizeOfNestedTupleProto int = 24
+	SizeOfNestedTupleProto uint32 = 24
+)
+
+const (
+	toMarkTCP         = 64
+	toMarkUDP         = 16
+	toSrcPort         = 3
+	skipNetlinkHeader = 3
 )
