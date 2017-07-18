@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"net"
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
@@ -24,22 +23,4 @@ type SockHandles struct {
 type Handles struct {
 	Syscalls syscallwrappers.Syscalls
 	SockHandles
-}
-
-// ipTuple -- Conntrack flow structure for ipTuple
-type ipTuple struct {
-	SrcIP    net.IP
-	DstIP    net.IP
-	Protocol uint8
-	SrcPort  uint16
-	DstPort  uint16
-}
-
-//ConntrackFlow -- ConntrackFlow for parsing
-//http://git.netfilter.org/libnetfilter_conntrack/tree/include/internal/object.h
-type ConntrackFlow struct {
-	FamilyType uint8
-	Forward    ipTuple
-	Reverse    ipTuple
-	Mark       uint32
 }
