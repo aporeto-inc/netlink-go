@@ -56,7 +56,7 @@ type NfQueue struct {
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      NfAttrSlice
+	nfattrresponse      common.NfAttrSlice
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -441,7 +441,7 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error) {
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
 
-	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
+	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, &q.nfattrresponse)
 
 	return nfgenmsg, nfattrmsg, err
 }

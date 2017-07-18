@@ -15,13 +15,13 @@ func GetPacketInfo(attr *common.NfAttrSlice) (int, int, []byte) {
 	if attr == nil {
 		return packetID, mark, []byte{}
 	}
-	if data := common.GetNetlinkDataArray(NfqaPacketHdr, attr); data != nil {
+	if data := common.GetNetlinkDataArray(int(NfqaPacketHdr), attr); data != nil {
 		packetID = int(common.NativeEndian().Uint32(data))
 	}
-	if data := common.GetNetlinkDataArray(NfqaMark, attr); data != nil {
+	if data := common.GetNetlinkDataArray(int(NfqaMark), attr); data != nil {
 		mark = int(binary.BigEndian.Uint32(data))
 	}
-	if payload := common.GetNetlinkDataArray(NfqaPayload, attr); payload != nil {
+	if payload := common.GetNetlinkDataArray(int(NfqaPayload), attr); payload != nil {
 		return packetID, mark, payload
 	}
 	return packetID, mark, []byte{}
