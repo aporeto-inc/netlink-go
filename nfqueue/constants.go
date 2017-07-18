@@ -6,6 +6,8 @@ import (
 )
 
 const (
+	//NfDefaultPacketSize   the maximum size packet to expect on queue
+	NfDefaultPacketSize = 0xffff
 	//NFQNL_ATTR = Netfilter Queue Netink atttributes
 
 	//NfqaUnspec  unspecified

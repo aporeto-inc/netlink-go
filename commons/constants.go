@@ -18,8 +18,6 @@ const (
 	ConntrackExpectTable = 2
 )
 const (
-	//NfDefaultPacketSize   the maximum size packet to expect on queue
-	NfDefaultPacketSize = 0xffff
 	//NFQUEUESUBSYSID The netlink subsystem id for nfqueue
 	NFQUEUESUBSYSID = 0x3
 	//SOCKFAMILY  constant for AF_NETLINK
