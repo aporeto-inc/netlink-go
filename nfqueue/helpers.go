@@ -10,17 +10,17 @@ import (
 //GetPacketInfo -- Extract packet info from netlink response
 //Returns mark,packetid and packet payload
 //Mark is uint32
-func GetPacketInfo(attr []*commons.NfAttrResponsePayload) (int, int, []byte) {
+func GetPacketInfo(attr []*common.NfAttrResponsePayload) (int, int, []byte) {
 	var packetID, mark int
 
 	if attr[NfqaPacketHdr] != nil {
-		packetID = int(commons.NativeEndian().Uint32(commons.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
+		packetID = int(common.NativeEndian().Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
 	}
 	if attr[NfqaMark] != nil {
-		mark = int(binary.BigEndian.Uint32(commons.GetNetlinkDataArray(int(NfqaMark),attr)))
+		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark),attr)))
 	}
 	if attr[NfqaPayload] != nil {
-		return packetID, mark, commons.GetNetlinkDataArray(int(NfqaPayload),attr)
+		return packetID, mark, common.GetNetlinkDataArray(int(NfqaPayload),attr)
 	}
 
 	return packetID, mark, []byte{}
@@ -111,6 +111,6 @@ func (r *NfqMsgConfigQueueLen) Length() uint32 {
 // }
 
 //QueueID -- return queueid
-func QueueID(msg *commons.NfqGenMsg) uint16 {
+func QueueID(msg *common.NfqGenMsg) uint16 {
 	return msg.GetNfgenResID()
 }

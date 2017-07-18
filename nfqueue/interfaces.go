@@ -24,7 +24,7 @@ type NFQueue interface {
 	NfqSetQueueMaxLen(queuelen uint32) error
 	NfqClose()
 	NfqDestroyQueue() error
-	Recv() (*commons.NfqGenMsg, []*commons.NfAttrResponsePayload, error)
+	Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error)
 	ProcessPackets()
 	BindPf() error
 	setSockHandle(handle SockHandle) //private unexported function for tests

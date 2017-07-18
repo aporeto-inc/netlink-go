@@ -1,4 +1,4 @@
-package commons
+package common
 
 func (r *NfAttr) SetNfaType(t uint16) {
 	r.nfaType = t

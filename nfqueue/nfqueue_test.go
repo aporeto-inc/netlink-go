@@ -36,13 +36,13 @@ func TestNfqOpen(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to open a socket ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
 
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 			mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-			mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+			mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 			mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 			mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 			nfqHandle, err := newNFQ.NfqOpen()
@@ -66,7 +66,7 @@ func TestUnbindPf(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to Unbind a socket ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
 			newNFQ.(*NfQueue).buf = []byte{0x45, 0x00, 0x00, 0x40, 0xf4, 0x1f, 0x40, 0x00, 0x40, 0x06, 0xa9, 0x6f, 0x0a, 0x01, 0x0a, 0x4c, 0xa4, 0x43, 0xe4, 0x98, 0xe1, 0xa1, 0x00, 0x50, 0x4d, 0xa6, 0xac, 0x48, 0x00, 0x00, 0x00, 0x00, 0xb0, 0x02, 0xff, 0xff, 0x6b, 0x6c, 0x00, 0x00, 0x02, 0x04, 0x05, 0xb4, 0x01, 0x03, 0x03, 0x05, 0x01, 0x01, 0x08, 0x0a, 0x1b, 0x4f, 0x37, 0x38, 0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0x00}
@@ -74,7 +74,7 @@ func TestUnbindPf(t *testing.T) {
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -108,7 +108,7 @@ func TestBindPf(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to bind a socket ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
@@ -116,7 +116,7 @@ func TestBindPf(t *testing.T) {
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -157,7 +157,7 @@ func TestCreateQueue(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to bind a socket ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
@@ -165,7 +165,7 @@ func TestCreateQueue(t *testing.T) {
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -212,7 +212,7 @@ func TestNfqSetMode(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to set mode for queue ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
@@ -220,7 +220,7 @@ func TestNfqSetMode(t *testing.T) {
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -275,7 +275,7 @@ func TestNfqSetQueueMaxLen(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to set mode for queue ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
@@ -283,7 +283,7 @@ func TestNfqSetQueueMaxLen(t *testing.T) {
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -345,7 +345,7 @@ func TestNfqClose(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to set mode for queue ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
 			newNFQ.(*NfQueue).buf = []byte{0x45, 0x00, 0x00, 0x40, 0xf4, 0x1f, 0x40, 0x00, 0x40, 0x06, 0xa9, 0x6f, 0x0a, 0x01, 0x0a, 0x4c, 0xa4, 0x43, 0xe4, 0x98, 0xe1, 0xa1, 0x00, 0x50, 0x4d, 0xa6, 0xac, 0x48, 0x00, 0x00, 0x00, 0x00, 0xb0, 0x02, 0xff, 0xff, 0x6b, 0x6c, 0x00, 0x00, 0x02, 0x04, 0x05, 0xb4, 0x01, 0x03, 0x03, 0x05, 0x01, 0x01, 0x08, 0x0a, 0x1b, 0x4f, 0x37, 0x38, 0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0x00}
@@ -353,7 +353,7 @@ func TestNfqClose(t *testing.T) {
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -420,7 +420,7 @@ func TestNfqDestroyQueue(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to set mode for queue ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
 			newNFQ.(*NfQueue).buf = []byte{0x45, 0x00, 0x00, 0x40, 0xf4, 0x1f, 0x40, 0x00, 0x40, 0x06, 0xa9, 0x6f, 0x0a, 0x01, 0x0a, 0x4c, 0xa4, 0x43, 0xe4, 0x98, 0xe1, 0xa1, 0x00, 0x50, 0x4d, 0xa6, 0xac, 0x48, 0x00, 0x00, 0x00, 0x00, 0xb0, 0x02, 0xff, 0xff, 0x6b, 0x6c, 0x00, 0x00, 0x02, 0x04, 0x05, 0xb4, 0x01, 0x03, 0x03, 0x05, 0x01, 0x01, 0x08, 0x0a, 0x1b, 0x4f, 0x37, 0x38, 0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0x00}
@@ -428,7 +428,7 @@ func TestNfqDestroyQueue(t *testing.T) {
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -497,14 +497,14 @@ func TestUnbindPfWithNoBuffer(t *testing.T) {
 		So(newNFQ, ShouldNotBeNil)
 
 		Convey("When I try to Unbind a socket ", func() {
-			sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+			sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 			newNFQ.(*NfQueue).Syscalls = mockSyscalls
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 				nfqHandle, err := newNFQ.NfqOpen()
@@ -607,11 +607,11 @@ func TestProcessPackets(t *testing.T) {
 		newNFQ.(*NfQueue).Syscalls = mockSyscalls
 		newNFQ.(*NfQueue).buf = []byte{0x78, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x0a, 0x0b, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x01, 0x00, 0x08, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x02, 0x10, 0x00, 0x09, 0x00, 0x00, 0x06, 0x00, 0x00, 0x52, 0x54, 0x00, 0x12, 0x35, 0x02, 0x00, 0x00, 0x14, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x59, 0x5d, 0x7a, 0xb6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x69, 0xe3, 0x2c, 0x00, 0x0a, 0x00, 0x45, 0x00, 0x00, 0x28, 0x6c, 0x1d, 0x00, 0x00, 0x40, 0x06, 0xf6, 0xa2, 0x0a, 0x00, 0x02, 0x02, 0x0a, 0x00, 0x02, 0x0f, 0x00, 0x50, 0xde, 0xba, 0x01, 0x7c, 0xdc, 0x02, 0xb5, 0x09, 0xc5, 0x27, 0x50, 0x11, 0xff, 0xff, 0x61, 0x08, 0x00, 0x00}
 
-		sockrcvbuf := 500 * int(commons.NfnlBuffSize)
+		sockrcvbuf := 500 * int(common.NfnlBuffSize)
 
 		mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(3, nil)
 		mockSyscalls.EXPECT().Bind(3, gomock.Any()).Times(1).Return(nil)
-		mockSyscalls.EXPECT().SetsockoptInt(3, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
+		mockSyscalls.EXPECT().SetsockoptInt(3, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 		mockSyscalls.EXPECT().SetsockoptInt(3, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
 		mockSyscalls.EXPECT().SetsockoptInt(3, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
 		nfqHandle, err := newNFQ.NfqOpen()
@@ -629,7 +629,7 @@ func TestProcessPackets(t *testing.T) {
 		err = newNFQ.CreateQueue(uint16(queueNum), passVerdict, errorCallback, nil)
 		So(err, ShouldBeNil)
 
-		oldHeaderSlice := make([]byte, int(syscall.SizeofNlMsghdr)+int(commons.SizeofNfGenMsg)+int(commons.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(commons.NfaLength(uint16(SizeofNfqMsgMarkHdr))))
+		oldHeaderSlice := make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr))))
 
 		err = newNFQ.NfqSetMode(NfqnlCopyPacket, 0xffff)
 		So(err, ShouldBeNil)

@@ -56,7 +56,7 @@ type NfQueue struct {
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      []*commons.NfAttrResponsePayload
+	nfattrresponse      []*common.NfAttrResponsePayload
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -69,13 +69,13 @@ func NewNFQueue() NFQueue {
 	n := &NfQueue{
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
-		buf:                 make([]byte, commons.NfnlBuffSize),
-		nfattrresponse:      make([]*commons.NfAttrResponsePayload, nfqaMax),
-		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(commons.SizeofNfGenMsg)+int(commons.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(commons.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
+		buf:                 make([]byte, common.NfnlBuffSize),
+		nfattrresponse:      make([]*common.NfAttrResponsePayload, nfqaMax),
+		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
 
 	for i := 0; i < int(nfqaMax); i++ {
-		n.nfattrresponse[i] = commons.SetNetlinkData(commons.NfnlBuffSize)
+		n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
 	}
 
 	return n
@@ -127,13 +127,13 @@ func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize 
 //The fd for the socket is stored in an unexported handle
 func (q *NfQueue) NfqOpen() (SockHandle, error) {
 	nfqHandle := &NfqSockHandle{Syscalls: q.Syscalls, buf: q.buf}
-	q.SubscribedSubSys |= (0x1 << commons.NFQUEUESUBSYSID)
+	q.SubscribedSubSys |= (0x1 << common.NFQUEUESUBSYSID)
 	fd, err := q.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
 		return nil, err
 	}
 	nfqHandle.fd = fd
-	nfqHandle.rcvbufSize = commons.NfnlBuffSize
+	nfqHandle.rcvbufSize = common.NfnlBuffSize
 
 	nfqHandle.lsa.Family = syscall.AF_NETLINK
 	err = q.Syscalls.Bind(fd, &nfqHandle.lsa)
@@ -141,8 +141,8 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 		return nil, err
 	}
 	opt := 1
-	sockrcvbuf := 500 * int(commons.NfnlBuffSize)
-	q.Syscalls.SetsockoptInt(fd, commons.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt)
+	sockrcvbuf := 500 * int(common.NfnlBuffSize)
+	q.Syscalls.SetsockoptInt(fd, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt)
 	q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf)
 	q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf)
 	q.queueHandle = nfqHandle
@@ -186,12 +186,12 @@ func (qh *NfqSockHandle) recv() error {
 	if err != nil {
 		return fmt.Errorf("Recvfrom returned error %v", err)
 	}
-	hdr, next, err := commons.NetlinkMessageToStruct(buf[:n+1])
+	hdr, next, err := common.NetlinkMessageToStruct(buf[:n+1])
 	if err != nil {
 		return err
 	}
-	if hdr.Type == commons.NlMsgError {
-		_, err := commons.NetlinkErrMessagetoStruct(next)
+	if hdr.Type == common.NlMsgError {
+		_, err := common.NetlinkErrMessagetoStruct(next)
 		if err.Error != 0 {
 			return fmt.Errorf("Netlink Returned errror %d", err.Error)
 		}
@@ -225,13 +225,13 @@ func (q *NfQueue) UnbindPf() error {
 		pf:      syscall.AF_INET, //nolint
 	}
 	/* NfqnlMsgConfig */
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig,
-		commons.NlmFRequest|commons.NlmFAck,
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig,
+		common.NlmFRequest|common.NlmFAck,
 		0,
 	)
 
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, 0, hdr)
-	attr := commons.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, 0, hdr)
+	attr := common.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
 	data := nfgen.ToWireFormat()
 	data = append(data, attr.ToWireFormat()...)
 	data = append(data, config.ToWireFormat()...)
@@ -261,9 +261,9 @@ func (q *NfQueue) CreateQueue(num uint16, callback func(*NFPacket, interface{}),
 		_pad:    0,
 		pf:      syscall.AF_UNSPEC,
 	}
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig, commons.NlmFRequest|commons.NlmFAck, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, num, hdr)
-	attr := commons.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig, common.NlmFRequest|common.NlmFAck, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, num, hdr)
+	attr := common.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
 	nfgenData := nfgen.ToWireFormat()
 	nfgenData = append(nfgenData, attr.ToWireFormat()...)
 	nfgenData = append(nfgenData, config.ToWireFormat()...)
@@ -283,13 +283,13 @@ func (q *NfQueue) CreateQueue(num uint16, callback func(*NFPacket, interface{}),
 //mode -- Copy mode for this queue
 //packetSize -- The range of bytes from packets to copy
 func (q *NfQueue) NfqSetMode(mode nfqConfigMode, packetSize uint32) error {
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig, commons.NlmFRequest|commons.NlmFAck, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, q.QueueNum, hdr)
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig, common.NlmFRequest|common.NlmFAck, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 	config := &NfqMsgConfigParams{
 		copyMode:  uint8(mode),
 		copyRange: packetSize,
 	}
-	attr := commons.BuildNfAttrMsg(NfqaCfgParams, hdr, config.Length())
+	attr := common.BuildNfAttrMsg(NfqaCfgParams, hdr, config.Length())
 	nfgenData := nfgen.ToWireFormat()
 	nfgenData = append(nfgenData, attr.ToWireFormat()...)
 	nfgenData = append(nfgenData, config.ToWireFormat()...)
@@ -308,12 +308,12 @@ func (q *NfQueue) NfqSetMode(mode nfqConfigMode, packetSize uint32) error {
 //handle -- handle representing the opne netlink socket
 //queuelen -- Length of queue
 func (q *NfQueue) NfqSetQueueMaxLen(queuelen uint32) error {
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig, commons.NlmFRequest|commons.NlmFAck, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, q.QueueNum, hdr)
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig, common.NlmFRequest|common.NlmFAck, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 	config := &NfqMsgConfigQueueLen{
 		queueLen: queuelen,
 	}
-	attr := commons.BuildNfAttrMsg(NfqaCfgQueueMaxLen, hdr, config.Length())
+	attr := common.BuildNfAttrMsg(NfqaCfgQueueMaxLen, hdr, config.Length())
 	nfgenData := nfgen.ToWireFormat()
 	nfgenData = append(nfgenData, attr.ToWireFormat()...)
 	nfgenData = append(nfgenData, config.ToWireFormat()...)
@@ -330,25 +330,25 @@ func (q *NfQueue) NfqSetQueueMaxLen(queuelen uint32) error {
 
 //SetVerdict -- SetVerdict on the packet -- accept/drop
 func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, packetID uint32, packet []byte) {
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgVerdict, commons.NlmFRequest, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, q.QueueNum, hdr)
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgVerdict, common.NlmFRequest, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 	configVerdict := NfqMsgVerdictHdr{
 		verdict: verdict,
 		id:      packetID,
 	}
 
-	verdicthdr := commons.BuildNfAttrMsg(NfqaVerdictHdr, hdr, configVerdict.Length())
+	verdicthdr := common.BuildNfAttrMsg(NfqaVerdictHdr, hdr, configVerdict.Length())
 	iovecLen := hdr.Len
 
-	var payloadnfattr *commons.NfAttr
+	var payloadnfattr *common.NfAttr
 
-	payloadnfattr.SetNfaLen(commons.NfaLength(uint16(packetLen)))
+	payloadnfattr.SetNfaLen(common.NfaLength(uint16(packetLen)))
 	payloadnfattr.SetNfaType(uint16(NfqaPayload))
 
 	payloadnfattrbuf := payloadnfattr.ToWireFormat()
 	hdr.Len += uint32(payloadnfattr.GetNfaLen())
 	iovec := make([]syscall.Iovec, 3)
-	hdrBuf := commons.SerializeNlMsgHdr(hdr)
+	hdrBuf := common.SerializeNlMsgHdr(hdr)
 	hdrBuf = append(hdrBuf, nfgen.ToWireFormat()...)
 	vedicthdrbuf := append(hdrBuf, verdicthdr.ToWireFormat()...)
 	vedicthdrbuf = append(vedicthdrbuf, configVerdict.ToWireFormat()...)
@@ -358,19 +358,19 @@ func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, 
 
 	iovec[1].Base = &payloadnfattrbuf[0]
 	iovec[1].Len = uint64(len(payloadnfattrbuf))
-	pad := make([]byte, commons.NfaAlign(uint16(packetLen))-uint16(packetLen))
+	pad := make([]byte, common.NfaAlign(uint16(packetLen))-uint16(packetLen))
 	if len(pad) > 0 {
 		packet = append(packet, pad...)
 	}
 	iovec[2].Base = &packet[0]
-	iovec[2].Len = uint64(commons.NfaAlign(uint16(packetLen)))
+	iovec[2].Len = uint64(common.NfaAlign(uint16(packetLen)))
 	q.sendmsg(q.queueHandle.getFd(), iovec)
 }
 
 //SetVerdict2 -- SetVerdict on the packet -- accept/drop also mark
 func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte) {
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgVerdict, commons.NlmFRequest, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, q.QueueNum, hdr)
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgVerdict, common.NlmFRequest, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 
 	configVerdict := NfqMsgVerdictHdr{
 		verdict: verdict,
@@ -380,14 +380,14 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 		mark: mark,
 	}
 
-	verdicthdr := commons.BuildNfAttrMsg(NfqaVerdictHdr, hdr, configVerdict.Length())
-	markhdr := commons.BuildNfAttrMsg(uint16(NfqaMark), hdr, configMark.Length())
+	verdicthdr := common.BuildNfAttrMsg(NfqaVerdictHdr, hdr, configVerdict.Length())
+	markhdr := common.BuildNfAttrMsg(uint16(NfqaMark), hdr, configMark.Length())
 
 	iovecLen := hdr.Len
 
-	var payloadnfattr commons.NfAttr
+	var payloadnfattr common.NfAttr
 
-	payloadnfattr.SetNfaLen(commons.NfaLength(uint16(packetLen)))
+	payloadnfattr.SetNfaLen(common.NfaLength(uint16(packetLen)))
 	payloadnfattr.SetNfaType(uint16(NfqaPayload))
 
 	payloadnfattr.SetNfaLen((uint16(packetLen)) + 4)
@@ -396,10 +396,10 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 	hdrSlice := q.hdrSlice
 	payloadnfattrbuf := payloadnfattr.ToWireFormat()
 	hdr.Len += uint32((payloadnfattr.GetNfaLen()))
-	pad := make([]byte, commons.NfaAlign(uint16(packetLen))-uint16(packetLen))
+	pad := make([]byte, common.NfaAlign(uint16(packetLen))-uint16(packetLen))
 	iovec := make([]syscall.Iovec, 3)
 
-	copyIndex := commons.SerializeNlMsgHdrBuf(hdr, hdrSlice)
+	copyIndex := common.SerializeNlMsgHdrBuf(hdr, hdrSlice)
 	copyIndex += nfgen.ToWireFormatBuf(hdrSlice[copyIndex:])
 	copyIndex += verdicthdr.ToWireFormatBuf(hdrSlice[copyIndex:])
 	copyIndex += configVerdict.ToWireFormatBuf(hdrSlice[copyIndex:])
@@ -424,16 +424,16 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*commons.NfqGenMsg, []*commons.NfAttrResponsePayload, error) {
+func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error) {
 	buf := q.buf
 	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Unable to read from socket %v", err)
 	}
-	hdr, payload, err := commons.NetlinkMessageToStruct(buf[:n])
+	hdr, payload, err := common.NetlinkMessageToStruct(buf[:n])
 
-	if hdr.Type == commons.NlMsgError {
-		_, err := commons.NetlinkErrMessagetoStruct(payload)
+	if hdr.Type == common.NlMsgError {
+		_, err := common.NetlinkErrMessagetoStruct(payload)
 		if err.Error != 0 {
 			return nil, nil, fmt.Errorf("Netlink Returned errror %d", err.Error)
 		}
@@ -442,13 +442,13 @@ func (q *NfQueue) Recv() (*commons.NfqGenMsg, []*commons.NfAttrResponsePayload, 
 		//fmt.Printf("HEader Type %v,Header Length %v Flags %x\n", hdr.Type, hdr.Len, hdr.Flags)
 		return nil, nil, fmt.Errorf("Netlink message format invalid : %v", err)
 	}
-	nfgenmsg, payload, err := commons.NetlinkMessageToNfGenStruct(payload)
+	nfgenmsg, payload, err := common.NetlinkMessageToNfGenStruct(payload)
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
 
-	nfattrmsg, _, err := commons.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
+	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
 
 	return nfgenmsg, nfattrmsg, err
 }
@@ -490,9 +490,9 @@ func (q *NfQueue) BindPf() error {
 		_pad:    0,
 		pf:      syscall.AF_INET,
 	}
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig, commons.NlmFRequest|commons.NlmFAck, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, 0, hdr)
-	attr := commons.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig, common.NlmFRequest|common.NlmFAck, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, 0, hdr)
+	attr := common.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
 	data := nfgen.ToWireFormat()
 	data = append(data, attr.ToWireFormat()...)
 	data = append(data, config.ToWireFormat()...)
@@ -545,9 +545,9 @@ func (q *NfQueue) NfqDestroyQueue() error {
 		_pad:    0,
 		pf:      syscall.AF_UNSPEC,
 	}
-	hdr := commons.BuildNlMsgHeader(commons.NfqnlMsgConfig, commons.NlmFRequest|commons.NlmFAck, 0)
-	nfgen := commons.BuildNfgenMsg(syscall.AF_UNSPEC, commons.NFNetlinkV0, q.QueueNum, hdr)
-	attr := commons.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
+	hdr := common.BuildNlMsgHeader(common.NfqnlMsgConfig, common.NlmFRequest|common.NlmFAck, 0)
+	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
+	attr := common.BuildNfAttrMsg(NfqaCfgCmd, hdr, config.Length())
 	nfgenData := nfgen.ToWireFormat()
 	nfgenData = append(nfgenData, attr.ToWireFormat()...)
 	nfgenData = append(nfgenData, config.ToWireFormat()...)

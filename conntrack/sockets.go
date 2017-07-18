@@ -14,7 +14,7 @@ func (h *Handles) open() (SockHandle, error) {
 		return nil, err
 	}
 	sh.fd = fd
-	sh.rcvbufSize = commons.NfnlBuffSize
+	sh.rcvbufSize = common.NfnlBuffSize
 	sh.lsa.Family = syscall.AF_NETLINK
 
 	err = h.Syscalls.Bind(fd, &sh.lsa)
@@ -40,19 +40,19 @@ func (sh *SockHandles) recv() error {
 		return fmt.Errorf("Recvfrom returned error %v", err)
 	}
 
-	hdr, next, err := commons.NetlinkMessageToStruct(buf[:n])
+	hdr, next, err := common.NetlinkMessageToStruct(buf[:n])
 	if err != nil {
 		return err
 	}
 
 	if hdr.Type == syscall.NLMSG_ERROR {
-		_, err := commons.NetlinkErrMessagetoStruct(next)
+		_, err := common.NetlinkErrMessagetoStruct(next)
 		if err.Error != 0 {
 			return fmt.Errorf("Netlink Returned errror %d", err.Error)
 		}
 	}
 
-	_, _, err = commons.NetlinkMessageToNfGenStruct(next)
+	_, _, err = common.NetlinkMessageToNfGenStruct(next)
 	if err != nil {
 		return fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
@@ -62,11 +62,11 @@ func (sh *SockHandles) recv() error {
 func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	sh.buf = buf
-	commons.NativeEndian().PutUint32(buf[0:4], msg.Header.Len)
-	commons.NativeEndian().PutUint16(buf[4:6], msg.Header.Type)
-	commons.NativeEndian().PutUint16(buf[6:8], msg.Header.Flags)
-	commons.NativeEndian().PutUint32(buf[8:12], msg.Header.Seq)
-	commons.NativeEndian().PutUint32(buf[12:16], msg.Header.Pid)
+	common.NativeEndian().PutUint32(buf[0:4], msg.Header.Len)
+	common.NativeEndian().PutUint16(buf[4:6], msg.Header.Type)
+	common.NativeEndian().PutUint16(buf[6:8], msg.Header.Flags)
+	common.NativeEndian().PutUint32(buf[8:12], msg.Header.Seq)
+	common.NativeEndian().PutUint32(buf[12:16], msg.Header.Pid)
 	copy(buf[16:], msg.Data)
 	return sh.Syscalls.Sendto(sh.fd, buf, 0, &sh.lsa)
 }

@@ -1,4 +1,4 @@
-package commons
+package common
 
 import (
 	"encoding/binary"
@@ -60,7 +60,6 @@ func BuildNlMsgHeader(msgType msgTypes, msgFlags NlmFlags, len uint32) *syscall.
 		Pid:   0,
 		Seq:   0,
 	}
-
 }
 
 //BuildNfgenMsg -- Build nfgen msg strcuure
@@ -131,7 +130,6 @@ func BuildNfAttrWithPaddingMsg(attrType uint16, dataLen int) *NfAttr {
 		nfaLen:  uint16(dataLen) + SizeofNfAttr,
 		nfaType: attrType,
 	}
-
 }
 
 //ToWireFormat -- Convert NfqGenMsg to byte slice
@@ -216,21 +214,6 @@ func (r *NfValue16) Length() uint16 {
 //Length -- Return length of struct
 func (r *NfValue8) Length() uint8 {
 	return uint8(unsafe.Sizeof(NfValue8{}))
-}
-
-// To convert net.IP to uint32
-func ip2int(ip net.IP) uint32 {
-	if len(ip) == 16 {
-		return binary.BigEndian.Uint32(ip[12:16])
-	}
-	return binary.BigEndian.Uint32(ip)
-}
-
-// To convert uint32 to net.IP
-func int2ip(nn uint32) net.IP {
-	ip := make(net.IP, 4)
-	binary.BigEndian.PutUint32(ip, nn)
-	return ip
 }
 
 //NetlinkMessageToStruct -- Convert netlink message byte slice to struct and payload
