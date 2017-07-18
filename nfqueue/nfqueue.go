@@ -50,8 +50,8 @@ type NFPacket struct {
 type NfQueue struct {
 	SubscribedSubSys    uint32
 	QueueNum            uint16
-	callback            func(buf *NFPacket, data interface{})
-	errorCallback       func(err error, data interface{})
+	callback            CallbackFunc
+	errorCallback       ErrorCallbackFunc
 	privateData         interface{}
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
@@ -80,7 +80,7 @@ func NewNFQueue() NFQueue {
 //maxPacketsInQueue -- max number of packets in Queue
 //packetSize -- The max expected packetsize
 //privateData -- We will return this on NFpacket.Opaque data for this system.
-func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) (Verdict, error) {
+func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback CallbackFunc, errorCallback ErrorCallbackFunc, privateData interface{}) (Verdict, error) {
 
 	queuingHandle := NewNFQueue()
 
@@ -244,7 +244,7 @@ func (q *NfQueue) UnbindPf() error {
 //handle -- handle representing the opne netlink socket
 //num -- queue number
 //data -- private data associated with the queue
-func (q *NfQueue) CreateQueue(num uint16, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) error {
+func (q *NfQueue) CreateQueue(num uint16, callback CallbackFunc, errorCallback ErrorCallbackFunc, privateData interface{}) error {
 	q.QueueNum = num
 	q.callback = callback
 	q.errorCallback = errorCallback
