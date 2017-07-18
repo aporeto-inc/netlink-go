@@ -1,8 +1,6 @@
 package conntrack
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"net"
 	"syscall"
@@ -10,7 +8,6 @@ import (
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/vishvananda/netlink"
-	"github.com/vishvananda/netlink/nl"
 )
 
 // NewHandle which returns interface which implements Conntrack table get/set/flush
@@ -21,38 +18,28 @@ func NewHandle() Conntrack {
 // ConntrackTableList retrieves entries from Conntract table and parse it in the conntrack flow struct
 // Using vishvananda/netlink and nl packages for parsing
 // returns an array of ConntrackFlow with 4 tuples, protocol and mark
-func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*ConntrackFlow, error) {
-	req := h.newConntrackRequest(table, syscall.AF_INET, common.IPCTNL_MSG_CT_GET, syscall.NLM_F_DUMP)
-
-	res, err := req.Execute(syscall.NETLINK_NETFILTER, 0)
-	if err != nil {
-		return nil, err
+func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*netlink.ConntrackFlow, error) {
+	result, err := netlink.ConntrackTableList(table, syscall.AF_INET)
+	if result == nil || err != nil {
+		return nil, fmt.Errorf("Empty table")
 	}
-
-	var result []*ConntrackFlow
-	for _, dataRaw := range res {
-		result = append(result, parseRawData(dataRaw))
-	}
-	if result == nil {
-		return nil, fmt.Errorf("No conntrack entries")
-	}
-
 	return result, nil
 }
 
 // ConntrackTableFlush will flush the Conntrack table entries
 // Using vishvananda/netlink and nl packages for flushing entries
 func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
-	req := h.newConntrackRequest(table, syscall.AF_INET, common.IPCTNL_MSG_CT_DELETE, syscall.NLM_F_ACK)
-
-	_, err := req.Execute(syscall.NETLINK_NETFILTER, 0)
-	return err
+	err := netlink.ConntrackTableFlush(table)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ConntrackTableUpdate will update conntrack table attributes for specified records
 // Currently supports only mark
 // Also prints number of entries updated and entries not updated (because of bad parameters)
-func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows []*ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
+func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
 
 	sh, err := h.open()
 	if err != nil {
@@ -124,7 +111,7 @@ func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows [
 	return 0, nil
 }
 
-func checkTuplesInFlow(flow *ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) bool {
+func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) bool {
 
 	var isSrcIPPresent, isDstIPPresent, isProtoPresent, isSrcPortPresent, isDstPortPresent bool
 
@@ -206,139 +193,4 @@ func buildConntrackUpdateRequest(ipv4ValueSrc, ipv4ValueDst, mark common.NfValue
 	nfgendata = append(nfgendata, mark.ToWireFormat()...)
 
 	return hdr, nfgendata
-}
-
-func (h *Handles) newConntrackRequest(table netlink.ConntrackTableType, family netlink.InetFamily, operation, flags int) *nl.NetlinkRequest {
-
-	req := h.newNetlinkRequest((int(table)<<8)|operation, flags)
-
-	msg := &nl.Nfgenmsg{
-		NfgenFamily: uint8(family),
-		Version:     common.NFNetlinkV0,
-		ResId:       0,
-	}
-	req.AddData(msg)
-
-	return req
-}
-
-func (h *Handles) newNetlinkRequest(proto, flags int) *nl.NetlinkRequest {
-
-	return &nl.NetlinkRequest{
-		NlMsghdr: syscall.NlMsghdr{
-			Len:   uint32(syscall.SizeofNlMsghdr),
-			Type:  uint16(proto),
-			Flags: syscall.NLM_F_REQUEST | uint16(flags),
-		},
-	}
-}
-
-func parseRawData(data []byte) *ConntrackFlow {
-	s := &ConntrackFlow{}
-	var proto uint8
-	reader := bytes.NewReader(data)
-	binary.Read(reader, common.NativeEndian(), &s.FamilyType)
-
-	reader.Seek(skipNetlinkHeader, seekCurrent)
-
-	for reader.Len() > 0 {
-		nested, t, l := parseNfAttrTL(reader)
-		if nested && t == CTA_TUPLE_ORIG {
-			if nested, t, _ = parseNfAttrTL(reader); nested && t == CTA_TUPLE_IP {
-				proto = parseIpTuple(reader, &s.Forward)
-			}
-		} else if nested && t == CTA_TUPLE_REPLY {
-			if nested, t, _ = parseNfAttrTL(reader); nested && t == CTA_TUPLE_IP {
-				parseIpTuple(reader, &s.Reverse)
-				break
-			} else {
-				reader.Seek(int64(l), seekCurrent)
-			}
-		}
-	}
-
-	parseMark(reader, proto, s)
-
-	return s
-}
-
-func parseMark(reader *bytes.Reader, proto uint8, s *ConntrackFlow) {
-	if proto == common.TCP_PROTO {
-		reader.Seek(toMarkTCP, seekCurrent)
-		_, t, _, v := parseNfAttrTLV(reader)
-		if t == CTA_MARK {
-			s.Mark = uint32(v[3])
-		}
-	} else if proto == common.UDP_PROTO {
-		reader.Seek(toMarkUDP, seekCurrent)
-		_, t, _, v := parseNfAttrTLV(reader)
-		if t == CTA_MARK {
-			s.Mark = uint32(v[3])
-		}
-	}
-}
-
-func parseIpTuple(reader *bytes.Reader, tpl *ipTuple) uint8 {
-	for i := 0; i < 2; i++ {
-		_, t, _, v := parseNfAttrTLV(reader)
-		switch t {
-		case CTA_IP_V4_SRC, CTA_IP_V6_SRC:
-			tpl.SrcIP = v
-		case CTA_IP_V4_DST, CTA_IP_V6_DST:
-			tpl.DstIP = v
-		}
-	}
-
-	reader.Seek(4, seekCurrent)
-
-	_, t, _, v := parseNfAttrTLV(reader)
-	if t == CTA_PROTO_NUM {
-		tpl.Protocol = uint8(v[0])
-	}
-
-	reader.Seek(toSrcPort, seekCurrent)
-
-	for i := 0; i < 2; i++ {
-		_, t, _ := parseNfAttrTL(reader)
-		switch t {
-		case CTA_PROTO_SRC_PORT:
-			parseBERaw16(reader, &tpl.SrcPort)
-		case CTA_PROTO_DST_PORT:
-			parseBERaw16(reader, &tpl.DstPort)
-		}
-
-		reader.Seek(2, seekCurrent)
-	}
-	return tpl.Protocol
-}
-
-func parseNfAttrTLV(r *bytes.Reader) (isNested bool, attrType, len uint16, value []byte) {
-	isNested, attrType, len = parseNfAttrTL(r)
-	value = make([]byte, len)
-	binary.Read(r, binary.BigEndian, &value)
-
-	return isNested, attrType, len, value
-}
-
-func parseNfAttrTL(r *bytes.Reader) (isNested bool, attrType, len uint16) {
-	binary.Read(r, common.NativeEndian(), &len)
-	len -= common.SizeofNfAttr
-	binary.Read(r, common.NativeEndian(), &attrType)
-
-	isNested = (attrType & NLA_F_NESTED) == NLA_F_NESTED
-	attrType = attrType & (NLA_F_NESTED - 1)
-
-	return isNested, attrType, len
-}
-
-func parseBERaw16(r *bytes.Reader, v *uint16) {
-	binary.Read(r, binary.BigEndian, v)
-}
-
-// Display the table entries
-func (s *ConntrackFlow) String() string {
-	return fmt.Sprintf("%s\t%d src=%s dst=%s sport=%d dport=%d\tsrc=%s dst=%s sport=%d dport=%d mark=%d",
-		L4ProtoMap[s.Forward.Protocol], s.Forward.Protocol,
-		s.Forward.SrcIP.String(), s.Forward.DstIP.String(), s.Forward.SrcPort, s.Forward.DstPort,
-		s.Reverse.SrcIP.String(), s.Reverse.DstIP.String(), s.Reverse.SrcPort, s.Reverse.DstPort, s.Mark)
 }
