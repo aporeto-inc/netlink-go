@@ -6,8 +6,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/aporeto-inc/netlink-go/commons"
-	"github.com/aporeto-inc/netlink-go/commons/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
 //General structure of all message passed to nfnetlink for netlink.h in kernel
@@ -417,7 +417,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error) {
+func (q *NfQueue) Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error) {
 	buf := q.buf
 	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
 	if err != nil {
