@@ -6,8 +6,8 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/aporeto-inc/netlink-go/commons"
-	"github.com/aporeto-inc/netlink-go/commons/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )

@@ -3,7 +3,7 @@ package nfqueue
 import (
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/commons"
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 //Verdict -- Interface exposing functionality to get a copy of the received packet and set a verdict
@@ -24,11 +24,10 @@ type NFQueue interface {
 	NfqSetQueueMaxLen(queuelen uint32) error
 	NfqClose()
 	NfqDestroyQueue() error
-	Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error)
+	Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error)
 	ProcessPackets()
 	BindPf() error
 	setSockHandle(handle SockHandle) //private unexported function for tests
-
 }
 
 //SockHandle Opaque interface with unexported functions

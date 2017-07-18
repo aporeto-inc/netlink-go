@@ -136,6 +136,9 @@ type NfAttrResponsePayload struct {
 	data []byte
 }
 
+// NfAttrSlice is an array of attributes
+type NfAttrSlice [nfqaMax]NfAttrResponsePayload
+
 //NfqNetlinkRequest -- netlink request to send
 //NlMsgHdr fields
 //serialized data of structure passed to netlink

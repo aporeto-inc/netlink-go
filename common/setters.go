@@ -50,7 +50,7 @@ func (d *NfAttrResponsePayload) GetNetlinkData() []byte {
 	return d.data
 }
 
-func GetNetlinkDataArray(index int, d []*NfAttrResponsePayload) []byte {
+func GetNetlinkDataArray(index int, d *NfAttrSlice) []byte {
 	return d[index].data
 }
 

@@ -56,7 +56,7 @@ type NfQueue struct {
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      []*common.NfAttrResponsePayload
+	nfattrresponse      NfAttrSlice
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -70,14 +70,8 @@ func NewNFQueue() NFQueue {
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
 		buf:                 make([]byte, common.NfnlBuffSize),
-		nfattrresponse:      make([]*common.NfAttrResponsePayload, nfqaMax),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
-
-	for i := 0; i < int(nfqaMax); i++ {
-		n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
-	}
-
 	return n
 }
 
@@ -153,7 +147,6 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 //Returns an error is Send Failed or netlink returned an error
 //This is called with a Qhandle is a private function for the package
 func (qh *NfqSockHandle) query(msg *syscall.NetlinkMessage) error {
-
 	err := qh.send(msg)
 	if err != nil {
 		return err

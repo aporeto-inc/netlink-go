@@ -7,8 +7,8 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/commons"
-	"github.com/aporeto-inc/netlink-go/commons/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netlink/nl"
 )
@@ -71,8 +71,8 @@ func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows [
 
 		if isEntryPresent && newmark != 0 {
 
-			ipv4ValueSrc.Set32Value(common.Ip2int(net.ParseIP(ipSrc)))
-			ipv4ValueDst.Set32Value(common.Ip2int(net.ParseIP(ipDst)))
+			ipv4ValueSrc.Set32Value(common.IP2int(net.ParseIP(ipSrc)))
+			ipv4ValueDst.Set32Value(common.IP2int(net.ParseIP(ipDst)))
 			protoNum.Set8Value(protonum)
 			srcPort.Set16Value(srcport)
 			dstPort.Set16Value(dstport)
@@ -128,7 +128,7 @@ func checkTuplesInFlow(flow *ConntrackFlow, ipSrc, ipDst string, protonum uint8,
 
 	var isSrcIPPresent, isDstIPPresent, isProtoPresent, isSrcPortPresent, isDstPortPresent bool
 
-	if common.Ip2int(flow.Forward.SrcIP) == common.Ip2int(net.ParseIP(ipSrc)) && common.Ip2int(flow.Reverse.SrcIP) == common.Ip2int(net.ParseIP(ipDst)) {
+	if common.IP2int(flow.Forward.SrcIP) == common.IP2int(net.ParseIP(ipSrc)) && common.IP2int(flow.Reverse.SrcIP) == common.IP2int(net.ParseIP(ipDst)) {
 
 		isSrcIPPresent = true
 	} else {
@@ -136,7 +136,7 @@ func checkTuplesInFlow(flow *ConntrackFlow, ipSrc, ipDst string, protonum uint8,
 		isSrcIPPresent = false
 	}
 
-	if common.Ip2int(flow.Forward.DstIP) == common.Ip2int(net.ParseIP(ipDst)) && common.Ip2int(flow.Reverse.DstIP) == common.Ip2int(net.ParseIP(ipSrc)) {
+	if common.IP2int(flow.Forward.DstIP) == common.IP2int(net.ParseIP(ipDst)) && common.IP2int(flow.Reverse.DstIP) == common.IP2int(net.ParseIP(ipSrc)) {
 
 		isDstIPPresent = true
 	} else {

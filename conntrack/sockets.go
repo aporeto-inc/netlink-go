@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/commons"
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 func (h *Handles) open() (SockHandle, error) {

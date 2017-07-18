@@ -4,7 +4,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/commons/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
 //SockHandle -- Sock handle of netlink socket
