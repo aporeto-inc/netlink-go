@@ -1,15 +1,5 @@
 package conntrack
 
-const (
-	// backward compatibility with golang 1.6 which does not have io.SeekCurrent
-	seekCurrent = 1
-)
-
-var L4ProtoMap = map[uint8]string{
-	6:  "tcp",
-	17: "udp",
-}
-
 // #define NLA_F_NESTED (1 << 15)
 const (
 	NLA_F_NESTED = (1 << 15)
@@ -141,11 +131,4 @@ const (
 	SizeOfNestedTupleIP uint32 = 16
 
 	SizeOfNestedTupleProto uint32 = 24
-)
-
-const (
-	toMarkTCP         = 64
-	toMarkUDP         = 16
-	toSrcPort         = 3
-	skipNetlinkHeader = 3
 )
