@@ -424,7 +424,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
 func (q *NfQueue) Recv() (m *common.NfqGenMsg, s *common.NfAttrSlice, e error) {
 	_, m, s, e := q.recvNfPacket()
-	return
+	return m, s, e
 }
 
 //recvNfPacket -- Recv packets from socket and parse them return nfgen and nfattr slices
