@@ -66,12 +66,12 @@ func NewNFQueueNumPackets(numPackets uint32) NFQueue {
 	n := &NfQueue{
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
-		ringBuffer:          queue.NewRingBuffer(numPackets),
+		ringBuffer:          queue.NewRingBuffer(uint64(numPackets)),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
 
 	// Populate the ring buffer with packets
-	for i := uint64(0); i < numPackets; i++ {
+	for i := uint64(0); i < uint64(numPackets); i++ {
 		n.ringBuffer.Put(&NFPacket{
 			queue: n.ringBuffer,
 		})
@@ -125,7 +125,9 @@ func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize 
 //Open a new socket and return it in the NfqHandle.
 //The fd for the socket is stored in an unexported handle
 func (q *NfQueue) NfqOpen() (SockHandle, error) {
-	nfqHandle := &NfqSockHandle{Syscalls: q.Syscalls, buf: q.buf}
+	//This is just a config buf we will not use this in the datapath
+	buf := make([]byte, common.NfnlBuffSize)
+	nfqHandle := &NfqSockHandle{Syscalls: q.Syscalls, buf: buf}
 	q.SubscribedSubSys |= (0x1 << common.NFQUEUESUBSYSID)
 	fd, err := q.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
@@ -423,8 +425,8 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
 func (q *NfQueue) Recv() (m *common.NfqGenMsg, s *common.NfAttrSlice, e error) {
-	_, m, s, e := q.recvNfPacket()
-	return m, s, e
+	_, m, s, e = q.recvNfPacket()
+	return
 }
 
 //recvNfPacket -- Recv packets from socket and parse them return nfgen and nfattr slices
@@ -441,7 +443,7 @@ func (q *NfQueue) recvNfPacket() (*NFPacket, *common.NfqGenMsg, *common.NfAttrSl
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Unable to read from socket %v", err)
 	}
-	hdr, payload, err := common.NetlinkMessageToStruct(buf[:n])
+	hdr, payload, err := common.NetlinkMessageToStruct(nfPacket.buf[:n])
 
 	if hdr.Type == common.NlMsgError {
 		_, err := common.NetlinkErrMessagetoStruct(payload)
@@ -481,7 +483,7 @@ func (q *NfQueue) ProcessPackets() {
 		}
 
 		nfpacket.QueueHandle = q
-		nfpacket.ID, nfpacket.mark, nfpacket.Buffer = GetPacketInfo(attr)
+		nfpacket.ID, nfpacket.Mark, nfpacket.Buffer = GetPacketInfo(attr)
 
 		if q.callback(nfpacket, q.privateData) {
 			nfpacket.Free()
