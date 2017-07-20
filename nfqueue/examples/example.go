@@ -8,7 +8,7 @@ package main
 import (
 	"time"
 
-	"github.com/aporeto-inc/nfqueue-go"
+	"github.com/aporeto-inc/netlink-go/nfqueue"
 )
 
 func passNetVerdict(buf *nfqueue.NFPacket, data interface{}) bool {
@@ -25,6 +25,7 @@ func passVerdict(buf *nfqueue.NFPacket, data interface{}) bool {
 
 func errorCallback(err error, data interface{}) {
 }
+
 func main() {
 
 	nfqAppHdl := make([]nfqueue.Verdict, 2)
