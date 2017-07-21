@@ -24,8 +24,8 @@ func passVerdict(buf *NFPacket, data interface{}) bool {
 	return true
 }
 
-func errorCallback(err error, data interface{}) bool {
-	return true
+func errorCallback(err error, data interface{}) {
+
 }
 
 func TestNfqOpen(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
@@ -37,15 +38,6 @@ import (
  *   nlmsg_attrdata(nlh, hdrlen)---^
  */
 
-//NFPacket -- message format sent on channel
-type NFPacket struct {
-	Buffer      []byte
-	Mark        int
-	Xbuffer     []byte
-	QueueHandle *NfQueue
-	ID          int
-}
-
 //NfQueue Struct to hold global val for all instances of netlink socket
 type NfQueue struct {
 	SubscribedSubSys    uint32
@@ -55,7 +47,7 @@ type NfQueue struct {
 	privateData         interface{}
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
-	buf                 []byte
+	ringBuffer          *queue.RingBuffer
 	nfattrresponse      common.NfAttrSlice
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
@@ -65,13 +57,26 @@ var native binary.ByteOrder
 
 //NewNFQueue -- create a new NfQueue handle
 func NewNFQueue() NFQueue {
+	return NewNFQueueNumPackets(1)
+}
+
+//NewNFQueueNumPackets -- create a new NfQueue handle
+func NewNFQueueNumPackets(numPackets uint32) NFQueue {
 	nfqueueinit()
 	n := &NfQueue{
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
-		buf:                 make([]byte, common.NfnlBuffSize),
+		ringBuffer:          queue.NewRingBuffer(uint64(numPackets)),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
+
+	// Populate the ring buffer with packets
+	for i := uint64(0); i < uint64(numPackets); i++ {
+		n.ringBuffer.Put(&NFPacket{
+			queue: n.ringBuffer,
+		})
+	}
+
 	return n
 }
 
@@ -120,7 +125,9 @@ func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize 
 //Open a new socket and return it in the NfqHandle.
 //The fd for the socket is stored in an unexported handle
 func (q *NfQueue) NfqOpen() (SockHandle, error) {
-	nfqHandle := &NfqSockHandle{Syscalls: q.Syscalls, buf: q.buf}
+	//This is just a config buf we will not use this in the datapath
+	buf := make([]byte, common.NfnlBuffSize)
+	nfqHandle := &NfqSockHandle{Syscalls: q.Syscalls, buf: buf}
 	q.SubscribedSubSys |= (0x1 << common.NFQUEUESUBSYSID)
 	fd, err := q.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
@@ -417,39 +424,51 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error) {
-	buf := q.buf
-	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
+func (q *NfQueue) Recv() (m *common.NfqGenMsg, s *common.NfAttrSlice, e error) {
+	_, m, s, e = q.recvNfPacket()
+	return
+}
+
+//recvNfPacket -- Recv packets from socket and parse them return nfgen and nfattr slices
+func (q *NfQueue) recvNfPacket() (*NFPacket, *common.NfqGenMsg, *common.NfAttrSlice, error) {
+	rb, err := q.ringBuffer.Get()
 	if err != nil {
-		return nil, nil, fmt.Errorf("Unable to read from socket %v", err)
+		return nil, nil, nil, fmt.Errorf("Unable to read from socket %v", err)
 	}
-	hdr, payload, err := common.NetlinkMessageToStruct(buf[:n])
+	nfPacket, ok := rb.(*NFPacket)
+	if !ok {
+		return nil, nil, nil, fmt.Errorf("Internal buffer error")
+	}
+	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), nfPacket.buf[:], syscall.MSG_WAITALL)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("Unable to read from socket %v", err)
+	}
+	hdr, payload, err := common.NetlinkMessageToStruct(nfPacket.buf[:n])
 
 	if hdr.Type == common.NlMsgError {
 		_, err := common.NetlinkErrMessagetoStruct(payload)
 		if err.Error != 0 {
-			return nil, nil, fmt.Errorf("Netlink Returned errror %d", err.Error)
+			return nil, nil, nil, fmt.Errorf("Netlink Returned errror %d", err.Error)
 		}
 	}
 	if err != nil {
-		//fmt.Printf("HEader Type %v,Header Length %v Flags %x\n", hdr.Type, hdr.Len, hdr.Flags)
-		return nil, nil, fmt.Errorf("Netlink message format invalid : %v", err)
+		return nil, nil, nil, fmt.Errorf("Netlink message format invalid : %v", err)
 	}
 	nfgenmsg, payload, err := common.NetlinkMessageToNfGenStruct(payload)
 
 	if err != nil {
-		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
+		return nil, nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
 
 	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, &q.nfattrresponse)
 
-	return nfgenmsg, nfattrmsg, err
+	return nfPacket, nfgenmsg, nfattrmsg, err
 }
 
 //ProcessPackets -- Function to wait on socket to receive packets and post it back to channel
 func (q *NfQueue) ProcessPackets() {
 	for {
-		nfgenmsg, attr, err := q.Recv()
+		nfpacket, nfgenmsg, attr, err := q.recvNfPacket()
 
 		if err != nil {
 			if q.errorCallback != nil {
@@ -463,17 +482,13 @@ func (q *NfQueue) ProcessPackets() {
 			}
 		}
 
-		packetid, mark, packet := GetPacketInfo(attr)
+		nfpacket.QueueHandle = q
+		nfpacket.ID, nfpacket.Mark, nfpacket.Buffer = GetPacketInfo(attr)
 
-		q.callback(&NFPacket{
-			Buffer:      packet,
-			Mark:        mark,
-			QueueHandle: q,
-			ID:          packetid,
-		}, q.privateData)
-
+		if q.callback(nfpacket, q.privateData) {
+			nfpacket.Free()
+		}
 	}
-
 }
 
 //BindPf -- Bind to a PF family
