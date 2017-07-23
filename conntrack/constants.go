@@ -42,6 +42,7 @@ const (
 	CTA_TIMEOUT     = 7
 	CTA_MARK        = 8
 	CTA_PROTOINFO   = 4
+	CTA_LABELS      = 22
 )
 
 // enum ctattr_tuple {

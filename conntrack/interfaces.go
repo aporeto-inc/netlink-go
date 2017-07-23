@@ -12,8 +12,10 @@ type Conntrack interface {
 	ConntrackTableList(table netlink.ConntrackTableType) ([]*netlink.ConntrackFlow, error)
 	// ConntrackTableFlush is used to flush the conntrack entries
 	ConntrackTableFlush(table netlink.ConntrackTableType) error
-	// ConntrackTableUpdate is used to update conntrack attributes in the kernel. (Currently supports only mark)
-	ConntrackTableUpdate(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error)
+	// ConntrackTableUpdateMark is used to update conntrack mark attribute in the kernel
+	ConntrackTableUpdateMark(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error)
+	// ConntrackTableUpdateMark is used to update conntrack label attribute in the kernel
+	ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error)
 }
 
 // SockHandle Opaque interface with unexported functions

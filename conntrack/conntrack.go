@@ -36,66 +36,25 @@ func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
 	return nil
 }
 
-// ConntrackTableUpdate will update conntrack table attributes for specified records
-// Currently supports only mark
-// Also prints number of entries updated and entries not updated (because of bad parameters)
-func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
+// ConntrackTableUpdateMark will update conntrack table mark attribute
+// Also returns number of entries updated
+func (h *Handles) ConntrackTableUpdateMark(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
 
-	sh, err := h.open()
-	if err != nil {
-		return 0, err
-	}
-
-	var ipv4ValueSrc, ipv4ValueDst, mark common.NfValue32
-	var protoNum common.NfValue8
-	var srcPort, dstPort common.NfValue16
 	var entriesUpdated int
-	var recordsNotPresent int
+	var mark common.NfValue32
 
 	for i, _ := range flows {
-
-		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport, newmark)
+		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent && newmark != 0 {
-
-			ipv4ValueSrc.Set32Value(common.IP2int(net.ParseIP(ipSrc)))
-			ipv4ValueDst.Set32Value(common.IP2int(net.ParseIP(ipDst)))
-			protoNum.Set8Value(protonum)
-			srcPort.Set16Value(srcport)
-			dstPort.Set16Value(dstport)
+			hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
 			mark.Set32Value(newmark)
-
-			hdr, data := buildConntrackUpdateRequest(ipv4ValueSrc, ipv4ValueDst, mark, protoNum, srcPort, dstPort)
-
-			netlinkMsg := &syscall.NetlinkMessage{
-				Header: *hdr,
-				Data:   data,
-			}
-
-			// The netlink message structure is the following:
-			// Header:
-			// syscall.NlMsghdr
-			// Data:
-			// <len, Family, Version, ResID> 4 bytes
-			// <len, NLA_F_NESTED|CTA_TUPLE_ORIG> 4 bytes
-			// <len, NLA_F_NESTED|CTA_TUPLE_IP> 4 bytes
-			// <len, CTA_IP_V4_SRC, value> 4 bytes
-			// <len, CTA_IP_V4_DST, value> 4 bytes
-			// <len, NLA_F_NESTED|CTA_TUPLE_PROTO> 4 bytes
-			// <len, CTA_PROTO_NUM, value, pad> 4 bytes
-			// <len, CTA_PROTO_SRC_PORT, value, pad> 4 bytes
-			// <len, CTA_PROTO_DST_PORT, value, pad> 4 bytes
-			// <len, CTA_MARK, value> 4 bytes
-
-			err := sh.query(netlinkMsg)
+			data = append(data, appendMark(mark, hdr)...)
+			err := h.SendMessage(hdr, data)
 			if err != nil {
 				return 0, err
 			}
 			entriesUpdated++
-
-		} else if !isEntryPresent {
-
-			recordsNotPresent++
 		}
 	}
 
@@ -103,57 +62,72 @@ func (h *Handles) ConntrackTableUpdate(table netlink.ConntrackTableType, flows [
 		return entriesUpdated, nil
 	}
 
-	if recordsNotPresent >= 0 {
-		return 0, fmt.Errorf("Number of entries not updated because of bad parameters %d", recordsNotPresent)
-	}
-
-	sh.close()
-	return 0, nil
+	return 0, fmt.Errorf("Entry not present")
 }
 
-func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) bool {
+// ConntrackTableUpdateLabels will update conntrack table label attribute
+// Also returns number of entries updated
+func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error) {
+
+	var entriesUpdated int
+	var labels common.NfValue32
+
+	for i, _ := range flows {
+		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
+
+		if isEntryPresent && newlabels != 0 {
+			hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
+			labels.Set32Value(newlabels)
+			data = append(data, appendLabel(labels, hdr)...)
+			err := h.SendMessage(hdr, data)
+			if err != nil {
+				return 0, err
+			}
+			entriesUpdated++
+		}
+	}
+
+	if entriesUpdated >= 0 {
+		return entriesUpdated, nil
+	}
+
+	return 0, fmt.Errorf("Entry not present")
+}
+
+func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16) bool {
 
 	var isSrcIPPresent, isDstIPPresent, isProtoPresent, isSrcPortPresent, isDstPortPresent bool
 
 	if common.IP2int(flow.Forward.SrcIP) == common.IP2int(net.ParseIP(ipSrc)) && common.IP2int(flow.Reverse.SrcIP) == common.IP2int(net.ParseIP(ipDst)) {
-
 		isSrcIPPresent = true
 	} else {
-
 		isSrcIPPresent = false
 	}
 
 	if common.IP2int(flow.Forward.DstIP) == common.IP2int(net.ParseIP(ipDst)) && common.IP2int(flow.Reverse.DstIP) == common.IP2int(net.ParseIP(ipSrc)) {
-
 		isDstIPPresent = true
 	} else {
-
 		isDstIPPresent = false
 	}
 
 	if flow.Forward.Protocol == protonum && flow.Reverse.Protocol == protonum {
-
 		isProtoPresent = true
 	} else {
-
 		isProtoPresent = false
 	}
 
 	if flow.Forward.SrcPort == srcport && flow.Reverse.SrcPort == dstport {
-
 		isSrcPortPresent = true
 	} else {
-
 		isSrcPortPresent = false
 	}
 
 	if flow.Forward.DstPort == dstport && flow.Reverse.DstPort == srcport {
-
 		isDstPortPresent = true
 	} else {
-
 		isDstPortPresent = false
 	}
+
 	if isSrcIPPresent && isDstIPPresent && isSrcPortPresent && isDstPortPresent && isProtoPresent {
 		return true
 	}
@@ -161,7 +135,17 @@ func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonu
 	return false
 }
 
-func buildConntrackUpdateRequest(ipv4ValueSrc, ipv4ValueDst, mark common.NfValue32, protoNum common.NfValue8, srcPort, dstPort common.NfValue16) (*syscall.NlMsghdr, []byte) {
+func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16) (*syscall.NlMsghdr, []byte) {
+
+	var ipv4ValueSrc, ipv4ValueDst common.NfValue32
+	var protoNum common.NfValue8
+	var srcPort, dstPort common.NfValue16
+
+	ipv4ValueSrc.Set32Value(common.IP2int(net.ParseIP(ipSrc)))
+	ipv4ValueDst.Set32Value(common.IP2int(net.ParseIP(ipDst)))
+	protoNum.Set8Value(protonum)
+	srcPort.Set16Value(srcport)
+	dstPort.Set16Value(dstport)
 
 	hdr := common.BuildNlMsgHeader(common.NfnlConntrackTable, common.NlmFRequest|common.NlmFAck, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_INET, common.NFNetlinkV0, 0, hdr)
@@ -173,7 +157,6 @@ func buildConntrackUpdateRequest(ipv4ValueSrc, ipv4ValueDst, mark common.NfValue
 	nfgenTupleProtoNum := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, int(protoNum.Length()))
 	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
 	nfgenTupleDstPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, int(dstPort.Length()))
-	nfgenMark := common.BuildNfAttrMsg(CTA_MARK, hdr, mark.Length())
 
 	nfgendata := nfgen.ToWireFormat()
 	nfgendata = append(nfgendata, nfgenTupleOrigAttr.ToWireFormat()...)
@@ -189,8 +172,51 @@ func buildConntrackUpdateRequest(ipv4ValueSrc, ipv4ValueDst, mark common.NfValue
 	nfgendata = append(nfgendata, srcPort.ToWireFormat()...)
 	nfgendata = append(nfgendata, nfgenTupleDstPort.ToWireFormat()...)
 	nfgendata = append(nfgendata, dstPort.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenMark.ToWireFormat()...)
-	nfgendata = append(nfgendata, mark.ToWireFormat()...)
 
 	return hdr, nfgendata
+}
+
+func appendMark(mark common.NfValue32, hdr *syscall.NlMsghdr) []byte {
+	nfgenMark := common.BuildNfAttrMsg(CTA_MARK, hdr, mark.Length())
+
+	markData := nfgenMark.ToWireFormat()
+	markData = append(markData, mark.ToWireFormat()...)
+
+	return markData
+}
+
+func appendLabel(label common.NfValue32, hdr *syscall.NlMsghdr) []byte {
+	nfgenLabel := common.BuildNfAttrMsg(CTA_LABELS, hdr, label.Length())
+
+	buf := make([]byte, int(common.SizeOfValue32))
+	common.NativeEndian().PutUint32(buf, label.Get32Value())
+
+	labelData := nfgenLabel.ToWireFormat()
+	labelData = append(labelData, buf...)
+
+	return labelData
+}
+
+func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
+	return h.sendMessage(hdr, data)
+}
+
+func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
+	sh, err := h.open()
+	if err != nil {
+		return err
+	}
+
+	netlinkMsg := &syscall.NetlinkMessage{
+		Header: *hdr,
+		Data:   data,
+	}
+
+	err = sh.query(netlinkMsg)
+	if err != nil {
+		return err
+	}
+
+	sh.close()
+	return nil
 }
