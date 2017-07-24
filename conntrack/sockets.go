@@ -1,7 +1,6 @@
 package conntrack
 
 import (
-	"encoding/hex"
 	"fmt"
 	"syscall"
 
@@ -37,7 +36,6 @@ func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {
 func (sh *SockHandles) recv() error {
 	buf := sh.buf
 	n, _, err := sh.Syscalls.Recvfrom(sh.fd, buf, 0)
-	fmt.Println(hex.Dump(buf))
 	if err != nil {
 		return fmt.Errorf("Recvfrom returned error %v", err)
 	}
@@ -46,6 +44,7 @@ func (sh *SockHandles) recv() error {
 	if err != nil {
 		return err
 	}
+
 	if hdr.Type == syscall.NLMSG_ERROR {
 		_, err := common.NetlinkErrMessagetoStruct(next)
 		if err.Error != 0 {
@@ -69,7 +68,6 @@ func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
 	common.NativeEndian().PutUint32(buf[8:12], msg.Header.Seq)
 	common.NativeEndian().PutUint32(buf[12:16], msg.Header.Pid)
 	copy(buf[16:], msg.Data)
-
 	return sh.Syscalls.Sendto(sh.fd, buf, 0, &sh.lsa)
 }
 

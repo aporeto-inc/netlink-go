@@ -48,8 +48,10 @@ func (h *Handles) ConntrackTableUpdateMark(table netlink.ConntrackTableType, flo
 
 		if isEntryPresent && newmark != 0 {
 			hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
+
 			mark.Set32Value(newmark)
 			data = append(data, appendMark(mark, hdr)...)
+
 			err := h.SendMessage(hdr, data)
 			if err != nil {
 				return 0, err
@@ -66,6 +68,7 @@ func (h *Handles) ConntrackTableUpdateMark(table netlink.ConntrackTableType, flo
 }
 
 // ConntrackTableUpdateLabels will update conntrack table label attribute
+// Specific to protocol (TCP or UDP)
 // Also returns number of entries updated
 func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error) {
 
@@ -75,10 +78,16 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 	for i, _ := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
-		if isEntryPresent && newlabels != 0 {
+		if isEntryPresent {
 			hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
+
+			if protonum == common.TCP_PROTO {
+				data = append(data, appendProtoInfo(hdr)...)
+			}
+
 			labels.Set32Value(newlabels)
 			data = append(data, appendLabel(labels, hdr)...)
+
 			err := h.SendMessage(hdr, data)
 			if err != nil {
 				return 0, err
@@ -94,6 +103,8 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 	return 0, fmt.Errorf("Entry not present")
 }
 
+// checkTuplesInFlow will check the flow with the given parameters (4 tuples and protocol)
+// returns true if the table has the given flow, false otherwise
 func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16) bool {
 
 	var isSrcIPPresent, isDstIPPresent, isProtoPresent, isSrcPortPresent, isDstPortPresent bool
@@ -135,6 +146,9 @@ func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonu
 	return false
 }
 
+// buildConntrackUpdateRequest is generic for all conntrack attribute updates
+// returns bytes till dstport from the table, if the flow is present
+// to update other attributes, it is highly recommended to check the length of the NESTED attributes
 func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16) (*syscall.NlMsghdr, []byte) {
 
 	var ipv4ValueSrc, ipv4ValueDst common.NfValue32
@@ -176,6 +190,7 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	return hdr, nfgendata
 }
 
+// appendMark will add the given mark to the flows
 func appendMark(mark common.NfValue32, hdr *syscall.NlMsghdr) []byte {
 	nfgenMark := common.BuildNfAttrMsg(CTA_MARK, hdr, mark.Length())
 
@@ -185,6 +200,7 @@ func appendMark(mark common.NfValue32, hdr *syscall.NlMsghdr) []byte {
 	return markData
 }
 
+// appendLabel will add the given label to the flows
 func appendLabel(label common.NfValue32, hdr *syscall.NlMsghdr) []byte {
 	nfgenLabel := common.BuildNfAttrMsg(CTA_LABELS, hdr, label.Length())
 
@@ -197,6 +213,32 @@ func appendLabel(label common.NfValue32, hdr *syscall.NlMsghdr) []byte {
 	return labelData
 }
 
+// appendProtoInfo will add protocolinfo to the bytes
+// only if the protocol is TCP
+func appendProtoInfo(hdr *syscall.NlMsghdr) []byte {
+	var flagsOrig, flagsReply common.NfValue16
+	var data []byte
+
+	flagsOrig.Set16Value(uint16(2570))
+	flagsReply.Set16Value(uint16(2570))
+
+	protoData := common.BuildNfAttrMsg(NLA_F_NESTED|CTA_PROTOINFO, hdr, SizeofNestedProtoInfo)
+	protoTCPData := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_PROTOINFO_TCP, int(SizeofNestedProtoInfoTCP))
+	protoOriginal := common.BuildNfAttrWithPaddingMsg(CTA_PROTOINFO_TCP_FLAGS_ORIGINAL, int(flagsOrig.Length()))
+	protoReply := common.BuildNfAttrWithPaddingMsg(CTA_PROTOINFO_TCP_FLAGS_REPLY, int(flagsReply.Length()))
+
+	data = append(data, protoData.ToWireFormat()...)
+	data = append(data, protoTCPData.ToWireFormat()...)
+	data = append(data, protoOriginal.ToWireFormat()...)
+	data = append(data, flagsOrig.ToWireFormat()...)
+	data = append(data, protoReply.ToWireFormat()...)
+	data = append(data, flagsReply.ToWireFormat()...)
+
+	return data
+}
+
+// To send and receive netlink messages
+// calls the private function sendmessage
 func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 	return h.sendMessage(hdr, data)
 }

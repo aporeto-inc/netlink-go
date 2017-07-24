@@ -14,7 +14,7 @@ type Conntrack interface {
 	ConntrackTableFlush(table netlink.ConntrackTableType) error
 	// ConntrackTableUpdateMark is used to update conntrack mark attribute in the kernel
 	ConntrackTableUpdateMark(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error)
-	// ConntrackTableUpdateMark is used to update conntrack label attribute in the kernel
+	// ConntrackTableUpdateLabel is used to update conntrack label attribute in the kernel
 	ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error)
 }
 
