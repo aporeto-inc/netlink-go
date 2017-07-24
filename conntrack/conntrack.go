@@ -36,25 +36,19 @@ func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
 	return nil
 }
 
-// ConntrackTableUpdateMark will update conntrack table mark attribute
+// ConntrackTableUpdateMarkForAvailableFlow will update conntrack table mark attribute only if the flow is present
 // Also returns number of entries updated
-func (h *Handles) ConntrackTableUpdateMark(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
+func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
 
 	var entriesUpdated int
-	var mark common.NfValue32
 
 	for i, _ := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent && newmark != 0 {
-			hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
-
-			mark.Set32Value(newmark)
-			data = append(data, appendMark(mark, hdr)...)
-
-			err := h.SendMessage(hdr, data)
+			err := h.ConntrackTableUpdateMark(ipSrc, ipDst, protonum, srcport, dstport, newmark)
 			if err != nil {
-				return 0, err
+				return 0, fmt.Errorf("Error", err)
 			}
 			entriesUpdated++
 		}
@@ -65,6 +59,24 @@ func (h *Handles) ConntrackTableUpdateMark(table netlink.ConntrackTableType, flo
 	}
 
 	return 0, fmt.Errorf("Entry not present")
+}
+
+// ConntrackTableUpdateMark will update conntrack table mark attribute
+func (h *Handles) ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) error {
+
+	var mark common.NfValue32
+
+	hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
+
+	mark.Set32Value(newmark)
+	data = append(data, appendMark(mark, hdr)...)
+
+	err := h.SendMessage(hdr, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ConntrackTableUpdateLabels will update conntrack table label attribute
