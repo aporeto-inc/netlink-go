@@ -42,6 +42,7 @@ const (
 	CTA_TIMEOUT     = 7
 	CTA_MARK        = 8
 	CTA_PROTOINFO   = 4
+	CTA_LABELS      = 22
 )
 
 // enum ctattr_tuple {
@@ -131,4 +132,15 @@ const (
 	SizeOfNestedTupleIP uint32 = 16
 
 	SizeOfNestedTupleProto uint32 = 24
+
+	SizeofNestedProtoInfo uint32 = 20
+
+	SizeofNestedProtoInfoTCP uint32 = 16
+)
+
+const (
+
+	//NOTE: THE BELOW CONSTANTS SHOULD BE IN /etc/xtables/connlabel.conf, if for instance ENCRYPTED here is 2, then in connlabel.conf ENCRYPTED should be 1
+	ENCRYPTED = 1
+	DECRYPTED = 2
 )
