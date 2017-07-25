@@ -6,14 +6,6 @@ import (
 	"github.com/aporeto-inc/netlink-go/common"
 )
 
-// CallbackFunc is a function signature to provide a new packet to the application.
-// The packet is not reused if the callback returns false. In such a case, its the
-// applications responsibility to call a Free on the NFPacket
-type CallbackFunc func(*NFPacket, interface{}) bool
-
-// ErrorCallbackFunc is the function signature to report errors file doing packet operations
-type ErrorCallbackFunc func(error, interface{})
-
 //Verdict -- Interface exposing functionality to get a copy of the received packet and set a verdict
 type Verdict interface {
 	SetVerdict2(queueNum uint32, verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte)
@@ -27,12 +19,12 @@ type NFQueue interface {
 	NfqOpen() (SockHandle, error)
 	UnbindPf() error
 
-	CreateQueue(num uint16, callback CallbackFunc, errorCallback ErrorCallbackFunc, privateData interface{}) error
+	CreateQueue(num uint16, data func(packet *NFPacket, callback interface{}), errorCallback func(err error, data interface{}), privateData interface{}) error
 	NfqSetMode(mode nfqConfigMode, packetSize uint32) error
 	NfqSetQueueMaxLen(queuelen uint32) error
 	NfqClose()
 	NfqDestroyQueue() error
-	Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error)
+	Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error)
 	ProcessPackets()
 	BindPf() error
 	setSockHandle(handle SockHandle) //private unexported function for tests

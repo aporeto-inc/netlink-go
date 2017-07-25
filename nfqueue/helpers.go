@@ -10,23 +10,21 @@ import (
 //GetPacketInfo -- Extract packet info from netlink response
 //Returns mark,packetid and packet payload
 //Mark is uint32
-func GetPacketInfo(attr *common.NfAttrSlice) (int, int, []byte) {
+func GetPacketInfo(attr []*common.NfAttrResponsePayload) (int, int, []byte) {
 	var packetID, mark int
-	if attr == nil {
-		return packetID, mark, []byte{}
+
+	if attr[NfqaPacketHdr] != nil {
+		packetID = int(common.NativeEndian().Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
 	}
-	if data := common.GetNetlinkDataArray(int(NfqaPacketHdr), attr); data != nil {
-		packetID = int(binary.BigEndian.Uint32(data))
+	if attr[NfqaMark] != nil {
+		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark),attr)))
 	}
-	if data := common.GetNetlinkDataArray(int(NfqaMark), attr); data != nil {
-		mark = int(binary.BigEndian.Uint32(data))
+	if attr[NfqaPayload] != nil {
+		return packetID, mark, common.GetNetlinkDataArray(int(NfqaPayload),attr)
 	}
-	if payload := common.GetNetlinkDataArray(int(NfqaPayload), attr); payload != nil {
-		return packetID, mark, payload
-	}
+
 	return packetID, mark, []byte{}
 }
-
 //ToWireFormat -- Convert NfqMsgVerdictHdr to byte slice
 func (r *NfqMsgVerdictHdr) ToWireFormat() []byte {
 	buf := make([]byte, SizeofNfqMsgVerdictHdr)
@@ -105,6 +103,7 @@ func (r *NfqMsgConfigQueueLen) ToWireFormat() []byte {
 func (r *NfqMsgConfigQueueLen) Length() uint32 {
 	return uint32(unsafe.Sizeof(NfqMsgConfigQueueLen{}))
 }
+
 
 //ParseNfAttrResponse -- Parse the Nfattrresponse payload
 // func ParseNfAttrResponse(element *NfAttrResponsePayload) (uint16, uint16, []byte) {
