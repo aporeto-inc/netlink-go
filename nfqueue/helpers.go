@@ -14,7 +14,7 @@ func GetPacketInfo(attr []*common.NfAttrResponsePayload) (int, int, []byte) {
 	var packetID, mark int
 
 	if attr[NfqaPacketHdr] != nil {
-		packetID = int(common.NativeEndian().Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
+		packetID = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
 	}
 	if attr[NfqaMark] != nil {
 		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark),attr)))
