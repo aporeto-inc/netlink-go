@@ -38,7 +38,7 @@ func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
 
 // ConntrackTableUpdateMarkForAvailableFlow will update conntrack table mark attribute only if the flow is present
 // Also returns number of entries updated
-func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
+func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error) {
 
 	var entriesUpdated int
 
