@@ -241,7 +241,8 @@ func NetlinkMessageToNfGenStruct(buf []byte) (*NfqGenMsg, []byte, error) {
 }
 
 //NetlinkMessageToNfAttrStruct -- Convert byte slice representing nfattr to nfattr struct slice
-func NetlinkMessageToNfAttrStruct(buf []byte, hdr *NfAttrSlice) (*NfAttrSlice, []byte, error) {
+func NetlinkMessageToNfAttrStruct(buf []byte, hdr []*NfAttrResponsePayload) ([]*NfAttrResponsePayload, []byte, error) {
+	//hdr := make([]*NfAttrResponsePayload, nfqaMax)
 	i := 0
 	for i < len(buf) {
 		if (i + 4) > len(buf) {
@@ -275,6 +276,7 @@ func NetlinkErrMessagetoStruct(buf []byte) (*syscall.NlMsghdr, *syscall.NlMsgerr
 	err.Error = int32(NativeEndian().Uint32(buf))
 	hdr, _, _ := NetlinkMessageToStruct(buf[4:])
 	return hdr, err
+
 }
 
 func NativeEndian() binary.ByteOrder {
@@ -285,7 +287,7 @@ func NativeEndian() binary.ByteOrder {
 	return binary.LittleEndian
 }
 
-//IP2int converts net.IP to uint32
+// IP2int converts net.IP to uint32
 func IP2int(ip net.IP) uint32 {
 	if len(ip) == 16 {
 		return binary.BigEndian.Uint32(ip[12:16])
@@ -293,7 +295,7 @@ func IP2int(ip net.IP) uint32 {
 	return binary.BigEndian.Uint32(ip)
 }
 
-// To convert uint32 to net.IP
+//IP2int converts uint32 to net.IP
 func Int2ip(nn uint32) net.IP {
 	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, nn)

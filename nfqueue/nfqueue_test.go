@@ -14,18 +14,15 @@ import (
 
 var isCalled int
 
-func passVerdict(buf *NFPacket, data interface{}) bool {
+func passVerdict(buf *NFPacket, data interface{}) {
 	if isCalled < 4 {
 		buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 		isCalled++
-	} else {
-		os.Exit(0)
 	}
-	return true
+	os.Exit(0)
 }
 
 func errorCallback(err error, data interface{}) {
-
 }
 
 func TestNfqOpen(t *testing.T) {

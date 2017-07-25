@@ -50,13 +50,13 @@ type NFPacket struct {
 type NfQueue struct {
 	SubscribedSubSys    uint32
 	QueueNum            uint16
-	callback            CallbackFunc
-	errorCallback       ErrorCallbackFunc
+	callback            func(buf *NFPacket, data interface{})
+	errorCallback       func(err error, data interface{})
 	privateData         interface{}
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      common.NfAttrSlice
+	nfattrresponse      []*common.NfAttrResponsePayload
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -70,8 +70,14 @@ func NewNFQueue() NFQueue {
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
 		buf:                 make([]byte, common.NfnlBuffSize),
+		nfattrresponse:      make([]*common.NfAttrResponsePayload, nfqaMax),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
+
+	for i := 0; i < int(nfqaMax); i++ {
+		n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
+	}
+
 	return n
 }
 
@@ -80,7 +86,7 @@ func NewNFQueue() NFQueue {
 //maxPacketsInQueue -- max number of packets in Queue
 //packetSize -- The max expected packetsize
 //privateData -- We will return this on NFpacket.Opaque data for this system.
-func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback CallbackFunc, errorCallback ErrorCallbackFunc, privateData interface{}) (Verdict, error) {
+func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) (Verdict, error) {
 
 	queuingHandle := NewNFQueue()
 
@@ -147,6 +153,7 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 //Returns an error is Send Failed or netlink returned an error
 //This is called with a Qhandle is a private function for the package
 func (qh *NfqSockHandle) query(msg *syscall.NetlinkMessage) error {
+
 	err := qh.send(msg)
 	if err != nil {
 		return err
@@ -244,7 +251,7 @@ func (q *NfQueue) UnbindPf() error {
 //handle -- handle representing the opne netlink socket
 //num -- queue number
 //data -- private data associated with the queue
-func (q *NfQueue) CreateQueue(num uint16, callback CallbackFunc, errorCallback ErrorCallbackFunc, privateData interface{}) error {
+func (q *NfQueue) CreateQueue(num uint16, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) error {
 	q.QueueNum = num
 	q.callback = callback
 	q.errorCallback = errorCallback
@@ -333,7 +340,7 @@ func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, 
 	verdicthdr := common.BuildNfAttrMsg(NfqaVerdictHdr, hdr, configVerdict.Length())
 	iovecLen := hdr.Len
 
-	var payloadnfattr *common.NfAttr
+	var payloadnfattr common.NfAttr
 
 	payloadnfattr.SetNfaLen(common.NfaLength(uint16(packetLen)))
 	payloadnfattr.SetNfaType(uint16(NfqaPayload))
@@ -380,7 +387,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 
 	var payloadnfattr common.NfAttr
 
-	payloadnfattr.SetNfaLen(common.NfaLength(uint16(packetLen)))
+	//payloadnfattr.SetNfaLen(common.NfaLength(uint16(packetLen)))
 	payloadnfattr.SetNfaType(uint16(NfqaPayload))
 
 	payloadnfattr.SetNfaLen((uint16(packetLen)) + 4)
@@ -417,7 +424,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error) {
+func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error) {
 	buf := q.buf
 	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
 	if err != nil {
@@ -441,7 +448,7 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, *common.NfAttrSlice, error) {
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
 
-	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, &q.nfattrresponse)
+	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
 
 	return nfgenmsg, nfattrmsg, err
 }
