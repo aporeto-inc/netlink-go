@@ -13,7 +13,7 @@ type Conntrack interface {
 	// ConntrackTableFlush is used to flush the conntrack entries
 	ConntrackTableFlush(table netlink.ConntrackTableType) error
 	// ConntrackTableUpdateMarkForAvailableFlow will update mark only if the flow is present
-	ConntrackTableUpdateMarkForAvailableFlow(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error)
+	ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) (int, error)
 	// ConntrackTableUpdateMark is used to update conntrack mark attribute in the kernel
 	ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) error
 	// ConntrackTableUpdateLabel is used to update conntrack label attribute in the kernel

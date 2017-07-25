@@ -25,7 +25,7 @@ func main() {
 		fmt.Println("Empty conntrack entries", err)
 	}
 	// Use ConntrackTableUpdateMark(...) if the 4 tuples and protocol are already known
-	entriesUpdated, err := handle.ConntrackTableUpdateMarkForAvailableFlow(common.ConntrackTable, result, result[0].Forward.SrcIP.String(), result[0].Forward.DstIP.String(), result[0].Forward.Protocol, result[0].Forward.SrcPort, result[0].Forward.DstPort, 45)
+	entriesUpdated, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, result[0].Forward.SrcIP.String(), result[0].Forward.DstIP.String(), result[0].Forward.Protocol, result[0].Forward.SrcPort, result[0].Forward.DstPort, 42)
 	fmt.Println("Number of entries updated", entriesUpdated)
 	if err != nil {
 		fmt.Println("Error Updating Mark", err)
