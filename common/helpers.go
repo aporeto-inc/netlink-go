@@ -276,7 +276,6 @@ func NetlinkErrMessagetoStruct(buf []byte) (*syscall.NlMsghdr, *syscall.NlMsgerr
 	err.Error = int32(NativeEndian().Uint32(buf))
 	hdr, _, _ := NetlinkMessageToStruct(buf[4:])
 	return hdr, err
-
 }
 
 func NativeEndian() binary.ByteOrder {

@@ -28,7 +28,6 @@ type NFQueue interface {
 	ProcessPackets()
 	BindPf() error
 	setSockHandle(handle SockHandle) //private unexported function for tests
-
 }
 
 //SockHandle Opaque interface with unexported functions
