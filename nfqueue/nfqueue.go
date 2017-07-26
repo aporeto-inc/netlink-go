@@ -186,10 +186,8 @@ func (qh *NfqSockHandle) recv() error {
 	if err != nil {
 		return fmt.Errorf("Recvfrom returned error %v", err)
 	}
-	hdr, next, err := common.NetlinkMessageToStruct(buf[:n+1])
-	if err != nil {
-		return err
-	}
+	hdr, next, _ := common.NetlinkMessageToStruct(buf[:n+1])
+
 	if hdr.Type == common.NlMsgError {
 		_, err := common.NetlinkErrMessagetoStruct(next)
 		if err.Error != 0 {
