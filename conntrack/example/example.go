@@ -1,3 +1,5 @@
+// +build linux !darwin
+
 // This is a sample conntrack mark update which uses the conntrack library
 // In this example we update the first entry in the conntrack with the given mark
 // For this example to work the conntrack should not be empty

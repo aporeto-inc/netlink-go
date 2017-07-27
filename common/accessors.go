@@ -1,3 +1,5 @@
+// +build linux !darwin
+
 package common
 
 func (r *NfAttr) SetNfaType(t uint16) {
