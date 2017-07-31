@@ -59,7 +59,7 @@ type SockHandles struct {
 	lsa        syscall.SockaddrNetlink
 }
 
-// NfPacket -- NflMsgConfigMode struct for parsing logs
+// NfPacket -- NfPacket struct for parsing logs
 // Payload -- Complete packet with ethernet,tcp and ip
 // IPLayer -- Iplayer struct
 // TCPLayer -- Tcplayer struct

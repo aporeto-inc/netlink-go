@@ -235,7 +235,7 @@ func (nl *NfLog) ReadLogs() {
 		err = nl.parseLog(buffer[:s])
 		if err != nil {
 			if nl.errorCallback != nil {
-				nl.errorCallback(fmt.Errorf("Netlink error %v", err))
+				nl.errorCallback(fmt.Errorf("Parse error %v", err))
 			}
 		}
 	}
