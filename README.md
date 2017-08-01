@@ -1,4 +1,4 @@
 # netlink-go
 
-Netlink APIs in Go
+Netlink Libraries in Go
 
