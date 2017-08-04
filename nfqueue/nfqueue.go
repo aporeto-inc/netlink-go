@@ -61,7 +61,7 @@ type NfQueue struct {
 	Syscalls            syscallwrappers.Syscalls
 }
 
-var native binary.ByteOrder
+var native binary.ByteOrder = nil
 
 //NewNFQueue -- create a new NfQueue handle
 func NewNFQueue() NFQueue {
@@ -565,6 +565,9 @@ func (q *NfQueue) setSockHandle(handle SockHandle) {
 
 //nfqueueinit -- Init to discover endianess of the system we are on
 func nfqueueinit() {
+	if native != nil {
+		return
+	}
 	var x uint32 = 0x01020304
 	if *(*byte)(unsafe.Pointer(&x)) == 0x01 {
 		native = binary.BigEndian
