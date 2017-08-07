@@ -317,6 +317,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				Payload:       m.Payload,
 				IPLayer:       m.IPLayer,
 				TCPLayer:      m.TCPLayer,
+				Prefix:        m.Prefix,
 				PacketPayload: m.PacketPayload,
 			}, nil)
 
