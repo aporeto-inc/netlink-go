@@ -65,6 +65,7 @@ type SockHandles struct {
 // TCPLayer -- Tcplayer struct
 // PacketPayload -- Tcp payload
 type NfPacket struct {
+	Prefix  string
 	Payload []byte
 	IPLayer
 	TCPLayer
@@ -77,6 +78,7 @@ type IPLayer struct {
 	DstIP    net.IP
 	Version  uint8
 	Protocol layers.IPProtocol
+	Length   uint16
 }
 
 // TCPLayer -- TCPLayer struct

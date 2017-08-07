@@ -272,7 +272,6 @@ func (nl *NfLog) parseLog(buffer []byte) error {
 func (nl *NfLog) parsePacket(buffer []byte) error {
 	reader := bytes.NewReader(buffer)
 
-	// Read Header
 	var header nflogHeader
 	binary.Read(reader, binary.LittleEndian, &header)
 
@@ -287,7 +286,12 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 
 		payloadLen := tlvHeader.Len - 4
 
-		if tlvHeader.Type == NFULA_PAYLOAD {
+		switch tlvHeader.Type {
+		case NFULA_PREFIX:
+			payload := make([]byte, NfaAlign16(payloadLen))
+			reader.Read(payload)
+			m.Prefix = string(payload[:payloadLen-1])
+		case NFULA_PAYLOAD:
 			payload := make([]byte, NfaAlign16(payloadLen))
 			reader.Read(payload)
 			ipPacket := gopacket.NewPacket(payload, layers.LayerTypeIPv4, gopacket.Default)
@@ -298,6 +302,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				m.DstIP = ip.DstIP
 				m.Version = ip.Version
 				m.Protocol = ip.Protocol
+				m.Length = ip.Length
 			}
 			tcpLayer := ipPacket.Layer(layers.LayerTypeTCP)
 			if tcpLayer != nil {
@@ -315,7 +320,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				PacketPayload: m.PacketPayload,
 			}, nil)
 
-		} else {
+		default:
 			reader.Seek(int64(NfaAlign16(payloadLen)), io.SeekCurrent)
 		}
 	}
