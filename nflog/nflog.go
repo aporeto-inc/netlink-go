@@ -317,7 +317,6 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 					tcp, _ := tcpLayer.(*layers.TCP)
 					m.SrcPort = int(tcp.SrcPort)
 					m.DstPort = int(tcp.DstPort)
-					m.AppPayload = tcp.Payload
 				}
 			}
 			m.Payload = payload[:payloadLen]
