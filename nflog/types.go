@@ -68,8 +68,7 @@ type NfPacket struct {
 	Prefix  string
 	Payload []byte
 	IPLayer
-	TCPLayer
-	UDPLayer
+	Ports
 	PacketPayload
 }
 
@@ -82,16 +81,10 @@ type IPLayer struct {
 	Length   uint16
 }
 
-// TCPLayer -- TCPLayer struct
-type TCPLayer struct {
-	TCPSrcPort layers.TCPPort
-	TCPDstPort layers.TCPPort
-}
-
-// TCPLayer -- TCPLayer struct
-type UDPLayer struct {
-	UDPSrcPort layers.UDPPort
-	UDPDstPort layers.UDPPort
+// Ports -- Generic struct for TCP and UDP ports
+type Ports struct {
+	SrcPort int
+	DstPort int
 }
 
 // PacketPayload -- PacketPayload struct
