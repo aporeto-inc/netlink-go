@@ -69,6 +69,7 @@ type NfPacket struct {
 	Payload []byte
 	IPLayer
 	TCPLayer
+	UDPLayer
 	PacketPayload
 }
 
@@ -83,8 +84,14 @@ type IPLayer struct {
 
 // TCPLayer -- TCPLayer struct
 type TCPLayer struct {
-	SrcPort layers.TCPPort
-	DstPort layers.TCPPort
+	TCPSrcPort layers.TCPPort
+	TCPDstPort layers.TCPPort
+}
+
+// TCPLayer -- TCPLayer struct
+type UDPLayer struct {
+	UDPSrcPort layers.UDPPort
+	UDPDstPort layers.UDPPort
 }
 
 // PacketPayload -- PacketPayload struct
