@@ -304,12 +304,22 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				m.Protocol = ip.Protocol
 				m.Length = ip.Length
 			}
-			tcpLayer := ipPacket.Layer(layers.LayerTypeTCP)
-			if tcpLayer != nil {
-				tcp, _ := tcpLayer.(*layers.TCP)
-				m.SrcPort = tcp.SrcPort
-				m.DstPort = tcp.DstPort
-				m.AppPayload = tcp.Payload
+			if m.Protocol.String() == "UDP" {
+				udpLayer := ipPacket.Layer(layers.LayerTypeUDP)
+				if udpLayer != nil {
+					udp, _ := udpLayer.(*layers.UDP)
+					m.UDPSrcPort = udp.SrcPort
+					m.UDPDstPort = udp.DstPort
+				}
+			}
+			if m.Protocol.String() == "TCP" {
+				tcpLayer := ipPacket.Layer(layers.LayerTypeTCP)
+				if tcpLayer != nil {
+					tcp, _ := tcpLayer.(*layers.TCP)
+					m.TCPSrcPort = tcp.SrcPort
+					m.TCPDstPort = tcp.DstPort
+					m.AppPayload = tcp.Payload
+				}
 			}
 			m.Payload = payload[:payloadLen]
 
@@ -317,6 +327,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				Payload:       m.Payload,
 				IPLayer:       m.IPLayer,
 				TCPLayer:      m.TCPLayer,
+				UDPLayer:      m.UDPLayer,
 				Prefix:        m.Prefix,
 				PacketPayload: m.PacketPayload,
 			}, nil)
