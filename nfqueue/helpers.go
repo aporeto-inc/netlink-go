@@ -3,8 +3,9 @@ package nfqueue
 import (
 	"encoding/binary"
 
-	"github.com/aporeto-inc/netlink-go/common"
 	"unsafe"
+
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 //GetPacketInfo -- Extract packet info from netlink response
