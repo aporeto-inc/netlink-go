@@ -36,6 +36,7 @@ func (r *NflMsgConfigMode) ToWireFormat() []byte {
 	return buf
 }
 
+//NfaAlign16 -- To align payload
 func NfaAlign16(v uint16) uint16 {
 	return (v + 3) & 0xFFFC
 }

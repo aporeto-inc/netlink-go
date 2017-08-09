@@ -45,10 +45,9 @@ type NflMsgConfigCommand struct {
 type NflMsgConfigMode struct {
 	copyRange uint32
 	copyMode  uint8
-	_pad      uint8
 }
 
-//SockHandle -- Sock handle of netlink socket
+//SockHandles -- Sock handle of netlink socket
 //fd -- fd of socket
 //rcvbufSize -- rcv buffer Size
 //lsa -- local address

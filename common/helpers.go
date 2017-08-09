@@ -114,7 +114,7 @@ func SerializeNlMsgHdrBuf(hdr *syscall.NlMsghdr, buf []byte) int {
 
 }
 
-//BuildNfAttrMsg -- Build nfattr message
+//BuildNfNestedAttrMsg -- Build nfnestedattr message
 //attrType -- Type of attr being added
 //dataLEn -- Length of the attribute
 func BuildNfNestedAttrMsg(attrType uint16, dataLen int) *NfAttr {
@@ -280,6 +280,7 @@ func NetlinkErrMessagetoStruct(buf []byte) (*syscall.NlMsghdr, *syscall.NlMsgerr
 	return hdr, err
 }
 
+//NativeEndian -- To get native endianess
 func NativeEndian() binary.ByteOrder {
 	var x uint32 = 0x01020304
 	if *(*byte)(unsafe.Pointer(&x)) == 0x01 {
@@ -296,7 +297,7 @@ func IP2int(ip net.IP) uint32 {
 	return binary.BigEndian.Uint32(ip)
 }
 
-//IP2int converts uint32 to net.IP
+//Int2ip converts uint32 to net.IP
 func Int2ip(nn uint32) net.IP {
 	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, nn)

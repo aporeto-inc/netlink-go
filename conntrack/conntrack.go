@@ -31,8 +31,8 @@ func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*netli
 // ConntrackTableFlush will flush the Conntrack table entries
 // Using vishvananda/netlink and nl packages for flushing entries
 func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
-	err := netlink.ConntrackTableFlush(table)
-	if err != nil {
+
+	if err := netlink.ConntrackTableFlush(table); err != nil {
 		return err
 	}
 	return nil
@@ -44,13 +44,13 @@ func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.Conn
 
 	var entriesUpdated int
 
-	for i, _ := range flows {
+	for i := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent && newmark != 0 {
 			err := h.ConntrackTableUpdateMark(ipSrc, ipDst, protonum, srcport, dstport, newmark)
 			if err != nil {
-				return 0, fmt.Errorf("Error", err)
+				return 0, fmt.Errorf("Error %v", err)
 			}
 			entriesUpdated++
 		}
@@ -73,15 +73,14 @@ func (h *Handles) ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, 
 	mark.Set32Value(newmark)
 	data = append(data, appendMark(mark, hdr)...)
 
-	err := h.SendMessage(hdr, data)
-	if err != nil {
+	if err := h.SendMessage(hdr, data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ConntrackTableUpdateLabels will update conntrack table label attribute
+// ConntrackTableUpdateLabel will update conntrack table label attribute
 // Specific to protocol (TCP or UDP)
 // Also returns number of entries updated
 func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error) {
@@ -89,7 +88,7 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 	var entriesUpdated int
 	var labels common.NfValue32
 
-	for i, _ := range flows {
+	for i := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent {

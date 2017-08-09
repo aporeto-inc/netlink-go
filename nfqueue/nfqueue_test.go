@@ -486,47 +486,6 @@ func TestNfqDestroyQueue(t *testing.T) {
 	})
 }
 
-func TestUnbindPfWithNoBuffer(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockSyscalls := syscallwrappers.NewMockSyscalls(ctrl)
-
-	Convey("Given I create a new nfqueue", t, func() {
-		newNFQ := NewNFQueue()
-		So(newNFQ, ShouldNotBeNil)
-
-		Convey("When I try to Unbind a socket ", func() {
-			sockrcvbuf := 500 * int(common.NfnlBuffSize)
-
-			newNFQ.(*NfQueue).Syscalls = mockSyscalls
-
-			Convey("When I try to open a socket", func() {
-				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
-				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
-				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf).Times(1)
-				mockSyscalls.EXPECT().SetsockoptInt(5, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf).Times(1)
-				nfqHandle, err := newNFQ.NfqOpen()
-
-				Convey("Then I should not get any error", func() {
-					So(nfqHandle, ShouldNotBeNil)
-					So(err, ShouldBeNil)
-				})
-
-				Convey("When I try to unbind a socket without buffer", func() {
-					mockSyscalls.EXPECT().Sendto(5, gomock.Any(), 0, gomock.Any()).AnyTimes()
-					mockSyscalls.EXPECT().Recvfrom(5, newNFQ.(*NfQueue).buf, 0).AnyTimes()
-					err := newNFQ.UnbindPf()
-					Convey("Then I should get error", func() {
-						So(err, ShouldNotBeNil)
-					})
-				})
-			})
-		})
-	})
-}
-
 func TestCreateQueueWithoutSocket(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
