@@ -70,6 +70,7 @@ type NfPacket struct {
 	IPLayer
 	Ports
 	PacketPayload
+	NflogHandle *NfLog
 }
 
 // IPLayer -- IPLayer struct
