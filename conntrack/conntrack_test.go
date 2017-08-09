@@ -3,6 +3,7 @@ package conntrack
 import (
 	"fmt"
 	"net"
+	"os"
 	"testing"
 
 	"github.com/aporeto-inc/netlink-go/common"
@@ -23,6 +24,11 @@ func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) 
 }
 
 func TestMark(t *testing.T) {
+
+	if os.Getenv("USER") != "root" {
+		t.SkipNow()
+	}
+
 	var mark int
 
 	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
@@ -77,6 +83,10 @@ func TestMark(t *testing.T) {
 }
 
 func TestFlush(t *testing.T) {
+
+	if os.Getenv("USER") != "root" {
+		t.SkipNow()
+	}
 
 	var resultLenBefore, resultLenAfter int
 	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
