@@ -1,3 +1,4 @@
+//nolint
 package nflog
 
 import "unsafe"
@@ -35,7 +36,6 @@ const (
 	NFULA_CFG_TIMEOUT  /* __u32 in 1/100 s */
 	NFULA_CFG_QTHRESH  /* __u32 */
 	NFULA_CFG_FLAGS    /* __u16 */
-	__NFULA_CFG_MAX
 )
 
 // enum nfulnl_attr_type
@@ -60,7 +60,6 @@ const (
 	NFULA_HWLEN              /* hardware header length */
 	NFULA_CT                 /* nf_conntrack_netlink.h */
 	NFULA_CT_INFO            /* enum ip_conntrack_info */
-	__NFULA_MAX
 )
 const (
 	SizeofMsgConfigCommand = 0x4

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 
 	"unsafe"
+
 	"github.com/aporeto-inc/netlink-go/common"
 )
 
@@ -14,17 +15,18 @@ func GetPacketInfo(attr []*common.NfAttrResponsePayload) (int, int, []byte) {
 	var packetID, mark int
 
 	if attr[NfqaPacketHdr] != nil {
-		packetID = int(native.Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr),attr)))
+		packetID = int(native.Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr), attr)))
 	}
 	if attr[NfqaMark] != nil {
-		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark),attr)))
+		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark), attr)))
 	}
 	if attr[NfqaPayload] != nil {
-		return packetID, mark, common.GetNetlinkDataArray(int(NfqaPayload),attr)
+		return packetID, mark, common.GetNetlinkDataArray(int(NfqaPayload), attr)
 	}
 
 	return packetID, mark, []byte{}
 }
+
 //ToWireFormat -- Convert NfqMsgVerdictHdr to byte slice
 func (r *NfqMsgVerdictHdr) ToWireFormat() []byte {
 	buf := make([]byte, SizeofNfqMsgVerdictHdr)
@@ -78,7 +80,6 @@ func (r *NfqMsgConfigCommand) Length() uint32 {
 	return uint32(unsafe.Sizeof(NfqMsgConfigCommand{}))
 }
 
-
 //ToWireFormat -- Convert NfqMsgConfigParams to byte slice
 func (r *NfqMsgConfigParams) ToWireFormat() []byte {
 	buf := make([]byte, SizeOfNfqMsgConfigParams)
@@ -103,7 +104,6 @@ func (r *NfqMsgConfigQueueLen) ToWireFormat() []byte {
 func (r *NfqMsgConfigQueueLen) Length() uint32 {
 	return uint32(unsafe.Sizeof(NfqMsgConfigQueueLen{}))
 }
-
 
 //ParseNfAttrResponse -- Parse the Nfattrresponse payload
 // func ParseNfAttrResponse(element *NfAttrResponsePayload) (uint16, uint16, []byte) {

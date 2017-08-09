@@ -1,3 +1,4 @@
+//nolint
 package conntrack
 
 // #define NLA_F_NESTED (1 << 15)
