@@ -29,7 +29,7 @@ func main() {
 	groups = []uint16{32}
 	copyrange = 64
 
-	nflog.BindAndListenForLogs(groups, copyrange, packetCallback, errorCallback)
+	nflogH, _ := nflog.BindAndListenForLogs(groups, copyrange, packetCallback, errorCallback)
 
 	for {
 		time.Sleep(100 * time.Second)

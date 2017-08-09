@@ -70,5 +70,6 @@ func (sh *SockHandles) getLocalAddress() syscall.SockaddrNetlink {
 }
 
 func (sh *SockHandles) close() {
+	fmt.Println("CLOSED")
 	sh.Syscalls.Close(sh.fd)
 }
