@@ -27,7 +27,7 @@ type NfLog struct {
 type nflogHeader struct {
 	Family  uint8
 	Version uint8
-	ResId   uint16 // BigEndian
+	ResID   uint16 // BigEndian
 }
 
 // nflogTlv -- unexported attribute struct for parsing

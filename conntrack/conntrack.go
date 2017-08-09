@@ -32,10 +32,8 @@ func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*netli
 // Using vishvananda/netlink and nl packages for flushing entries
 func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
 
-	if err := netlink.ConntrackTableFlush(table); err != nil {
-		return err
-	}
-	return nil
+	err := netlink.ConntrackTableFlush(table)
+	return err
 }
 
 // ConntrackTableUpdateMarkForAvailableFlow will update conntrack table mark attribute only if the flow is present
@@ -73,11 +71,9 @@ func (h *Handles) ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, 
 	mark.Set32Value(newmark)
 	data = append(data, appendMark(mark, hdr)...)
 
-	if err := h.SendMessage(hdr, data); err != nil {
-		return err
-	}
+	err := h.SendMessage(hdr, data)
 
-	return nil
+	return err
 }
 
 // ConntrackTableUpdateLabel will update conntrack table label attribute
