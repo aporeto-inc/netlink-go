@@ -329,6 +329,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				Ports:         m.Ports,
 				Prefix:        m.Prefix,
 				PacketPayload: m.PacketPayload,
+				NflogHandle:   nl,
 			}, nil)
 
 		default:
