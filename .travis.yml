@@ -24,6 +24,3 @@ install:
 script:
   - gometalinter.v1 --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=aligncheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
   - go test ./...
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
