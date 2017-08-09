@@ -8,7 +8,7 @@ import "syscall"
 // This is needed if we don't want to call BindAndListenForLogs()
 // Useful for testing and debugging
 type NFLog interface {
-	NFlogOpen() (SockHandle, error)
+	NFlogOpen() (*NfLog, error)
 	NFlogUnbind() error
 	NFlogBind() error
 	NFlogBindGroup(group []uint16, data func(packet *NfPacket, callback interface{}), errorCallback func(err error)) error

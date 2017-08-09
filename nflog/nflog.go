@@ -24,42 +24,43 @@ func NewNFLog() NFLog {
 // BindAndListenForLogs -- a complete set to open/unbind/bind/bindgroup and listen for logs
 // group -- group to bind with and listen
 // packetSize -- max expected packetSize (0:unlimited)
-func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfPacket, interface{}), errorCallback func(err error)) error {
+func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfPacket, interface{}), errorCallback func(err error)) (*NfLog, error) {
 	nflHandle := NewNFLog()
 
-	if _, err := nflHandle.NFlogOpen(); err != nil {
-		return fmt.Errorf("Error opening NFLog handle: %v ", err)
+	nflog, err := nflHandle.NFlogOpen()
+	if err != nil {
+		return nil, fmt.Errorf("Error opening NFLog handle: %v ", err)
 	}
 
 	if err := nflHandle.NFlogUnbind(); err != nil {
 		nflHandle.NFlogClose()
-		return fmt.Errorf("Error unbinding existing NFLog handler from AfInet protocol family: %v ", err)
+		return nil, fmt.Errorf("Error unbinding existing NFLog handler from AfInet protocol family: %v ", err)
 	}
 
 	if err := nflHandle.NFlogBind(); err != nil {
 		nflHandle.NFlogClose()
-		return fmt.Errorf("Error binding to AfInet protocol family: %v ", err)
+		return nil, fmt.Errorf("Error binding to AfInet protocol family: %v ", err)
 	}
 
 	if err := nflHandle.NFlogBindGroup(groups, callback, errorCallback); err != nil {
 		nflHandle.NFlogClose()
-		return fmt.Errorf("Error binding to nflog group: %v ", err)
+		return nil, fmt.Errorf("Error binding to nflog group: %v ", err)
 	}
 
 	if err := nflHandle.NFlogSetMode(groups, packetSize); err != nil {
 		nflHandle.NFlogClose()
-		return fmt.Errorf("Unable to set copy packet mode: %v ", err)
+		return nil, fmt.Errorf("Unable to set copy packet mode: %v ", err)
 	}
 
 	go nflHandle.ReadLogs()
-	return nil
+	return nflog, nil
 }
 
 // NFlogOpen Open a new netlink socket
 // Create a new sock handle and return the handle
 // Open a new socket and return it in the NflogHandle.
 // The fd for the socket is stored in an unexported handle
-func (nl *NfLog) NFlogOpen() (SockHandle, error) {
+func (nl *NfLog) NFlogOpen() (*NfLog, error) {
 	sh := &SockHandles{Syscalls: nl.Syscalls}
 	fd, err := nl.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
@@ -74,8 +75,9 @@ func (nl *NfLog) NFlogOpen() (SockHandle, error) {
 		return nil, err
 	}
 	nl.Socket = sh
+	nl.NflogHandle = nl
 
-	return sh, nil
+	return nl.NflogHandle, nil
 }
 
 // NFlogUnbind -- passes an unbind command to nfnetlink for AF_INET.
@@ -327,7 +329,6 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				Ports:         m.Ports,
 				Prefix:        m.Prefix,
 				PacketPayload: m.PacketPayload,
-				NflogHandle:   nl,
 			}, nil)
 
 		default:
@@ -336,6 +337,11 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 	}
 
 	return nil
+}
+
+func (nl *NfLog) GetNFloghandle() NFLog {
+
+	return nl.NflogHandle
 }
 
 // NFlogClose -- close the current socket
