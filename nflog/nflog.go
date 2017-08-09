@@ -261,7 +261,7 @@ func (nl *NfLog) parseLog(buffer []byte) error {
 		if header.Type == ((common.NFNL_SUBSYS_ULOG << 8) | NFULNL_MSG_PACKET) {
 			err := nl.parsePacket(buffer[16 : msgLen-1])
 			if err != nil {
-				return fmt.Errorf("Failed to parse NFPacket: ", err)
+				return fmt.Errorf("Failed to parse NFPacket: %v", err)
 			}
 		}
 		buffer = buffer[msgLen:]
@@ -340,6 +340,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 	return nil
 }
 
+// GetNFloghandle -- Get the nflog handle created
 func (nl *NfLog) GetNFloghandle() NFLog {
 
 	return nl.NflogHandle

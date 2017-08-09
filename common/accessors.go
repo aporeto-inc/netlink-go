@@ -74,7 +74,7 @@ func (nfg *NfqGenMsg) GetNfgenFamily() uint8 {
 	return nfg.nfgenFamily
 }
 
-// GetNfgenFamily -- Get  Nfgen version
+// GetNfgenVersion -- Get  Nfgen version
 func (nfg *NfqGenMsg) GetNfgenVersion() uint8 {
 	return nfg.version
 }

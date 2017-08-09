@@ -1,6 +1,5 @@
 // +build linux !darwin
-// nolint
-
+//nolint
 package common
 
 import (

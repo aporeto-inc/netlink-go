@@ -177,9 +177,9 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	hdr := common.BuildNlMsgHeader(common.NfnlConntrackTable, common.NlmFRequest|common.NlmFAck, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_INET, common.NFNetlinkV0, 0, hdr)
 	nfgenTupleOrigAttr := common.BuildNfAttrMsg(NLA_F_NESTED|CTA_TUPLE_ORIG, hdr, SizeOfNestedTupleOrig)
-	nfgenTupleIpAttr := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_IP, int(SizeOfNestedTupleIP))
-	nfgenTupleIpV4SrcAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
-	nfgenTupleIpV4DstAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
+	nfgenTupleIPAttr := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_IP, int(SizeOfNestedTupleIP))
+	nfgenTupleIPV4SrcAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
+	nfgenTupleIPV4DstAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
 	nfgenTupleProto := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_PROTO, int(SizeOfNestedTupleProto))
 	nfgenTupleProtoNum := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, int(protoNum.Length()))
 	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
@@ -187,10 +187,10 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 
 	nfgendata := nfgen.ToWireFormat()
 	nfgendata = append(nfgendata, nfgenTupleOrigAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpV4SrcAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPV4SrcAttr.ToWireFormat()...)
 	nfgendata = append(nfgendata, ipv4ValueSrc.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpV4DstAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPV4DstAttr.ToWireFormat()...)
 	nfgendata = append(nfgendata, ipv4ValueDst.ToWireFormat()...)
 	nfgendata = append(nfgendata, nfgenTupleProto.ToWireFormat()...)
 	nfgendata = append(nfgendata, nfgenTupleProtoNum.ToWireFormat()...)
@@ -250,7 +250,7 @@ func appendProtoInfo(hdr *syscall.NlMsghdr) []byte {
 	return data
 }
 
-// To send and receive netlink messages
+// SendMessage -- To send and receive netlink messages
 // calls the private function sendmessage
 func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 	return h.sendMessage(hdr, data)

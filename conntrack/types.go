@@ -8,7 +8,7 @@ import (
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
-//SockHandle -- Sock handle of netlink socket
+//SockHandles -- Sock handle of netlink socket
 //fd -- fd of socket
 //rcvbufSize -- rcv buffer Size
 //lsa -- local address
