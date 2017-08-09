@@ -19,7 +19,7 @@ type NfLog struct {
 	callback      func(buf *NfPacket, data interface{})
 	errorCallback func(err error)
 	Socket        SockHandle
-	NflogHandle   *NfLog
+	NflogHandle   NFLog
 	Syscalls      syscallwrappers.Syscalls
 }
 

@@ -24,7 +24,7 @@ func NewNFLog() NFLog {
 // BindAndListenForLogs -- a complete set to open/unbind/bind/bindgroup and listen for logs
 // group -- group to bind with and listen
 // packetSize -- max expected packetSize (0:unlimited)
-func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfPacket, interface{}), errorCallback func(err error)) (*NfLog, error) {
+func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfPacket, interface{}), errorCallback func(err error)) (NFLog, error) {
 	nflHandle := NewNFLog()
 
 	nflog, err := nflHandle.NFlogOpen()
@@ -60,7 +60,7 @@ func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfP
 // Create a new sock handle and return the handle
 // Open a new socket and return it in the NflogHandle.
 // The fd for the socket is stored in an unexported handle
-func (nl *NfLog) NFlogOpen() (*NfLog, error) {
+func (nl *NfLog) NFlogOpen() (NFLog, error) {
 	sh := &SockHandles{Syscalls: nl.Syscalls}
 	fd, err := nl.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
