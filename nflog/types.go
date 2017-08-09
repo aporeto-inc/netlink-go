@@ -19,6 +19,7 @@ type NfLog struct {
 	callback      func(buf *NfPacket, data interface{})
 	errorCallback func(err error)
 	Socket        SockHandle
+	NflogHandle   NFLog
 	Syscalls      syscallwrappers.Syscalls
 }
 
@@ -26,7 +27,7 @@ type NfLog struct {
 type nflogHeader struct {
 	Family  uint8
 	Version uint8
-	ResId   uint16 // BigEndian
+	ResID   uint16 // BigEndian
 }
 
 // nflogTlv -- unexported attribute struct for parsing
@@ -44,10 +45,9 @@ type NflMsgConfigCommand struct {
 type NflMsgConfigMode struct {
 	copyRange uint32
 	copyMode  uint8
-	_pad      uint8
 }
 
-//SockHandle -- Sock handle of netlink socket
+//SockHandles -- Sock handle of netlink socket
 //fd -- fd of socket
 //rcvbufSize -- rcv buffer Size
 //lsa -- local address
@@ -70,6 +70,7 @@ type NfPacket struct {
 	IPLayer
 	Ports
 	PacketPayload
+	NflogHandle *NfLog
 }
 
 // IPLayer -- IPLayer struct

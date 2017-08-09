@@ -1,5 +1,5 @@
 // +build linux !darwin
-
+//nolint
 package common
 
 import (
@@ -12,7 +12,6 @@ import (
 type msgTypes int
 type nfqaAttr int
 type nfqConfigCommands uint8
-type nfqConfigMode int
 
 //NlmFlags -- The flags passed to NlMsgHdr
 type NlmFlags uint32
@@ -82,7 +81,7 @@ type NfqMsgConfigQueueLen struct {
 	queueLen uint32
 }
 
-//NfqSockHandle -- Sock handle of netlink socket
+//SockHandles -- Sock handle of netlink socket
 //fd -- fd of socket
 //rcvbufSize -- rcv buffer Size
 //lsa -- local address

@@ -31,11 +31,9 @@ func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*netli
 // ConntrackTableFlush will flush the Conntrack table entries
 // Using vishvananda/netlink and nl packages for flushing entries
 func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
+
 	err := netlink.ConntrackTableFlush(table)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ConntrackTableUpdateMarkForAvailableFlow will update conntrack table mark attribute only if the flow is present
@@ -44,13 +42,13 @@ func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.Conn
 
 	var entriesUpdated int
 
-	for i, _ := range flows {
+	for i := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent && newmark != 0 {
 			err := h.ConntrackTableUpdateMark(ipSrc, ipDst, protonum, srcport, dstport, newmark)
 			if err != nil {
-				return 0, fmt.Errorf("Error", err)
+				return 0, fmt.Errorf("Error %v", err)
 			}
 			entriesUpdated++
 		}
@@ -74,14 +72,11 @@ func (h *Handles) ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, 
 	data = append(data, appendMark(mark, hdr)...)
 
 	err := h.SendMessage(hdr, data)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
-// ConntrackTableUpdateLabels will update conntrack table label attribute
+// ConntrackTableUpdateLabel will update conntrack table label attribute
 // Specific to protocol (TCP or UDP)
 // Also returns number of entries updated
 func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error) {
@@ -89,7 +84,7 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 	var entriesUpdated int
 	var labels common.NfValue32
 
-	for i, _ := range flows {
+	for i := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
 		if isEntryPresent {
@@ -178,9 +173,9 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	hdr := common.BuildNlMsgHeader(common.NfnlConntrackTable, common.NlmFRequest|common.NlmFAck, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_INET, common.NFNetlinkV0, 0, hdr)
 	nfgenTupleOrigAttr := common.BuildNfAttrMsg(NLA_F_NESTED|CTA_TUPLE_ORIG, hdr, SizeOfNestedTupleOrig)
-	nfgenTupleIpAttr := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_IP, int(SizeOfNestedTupleIP))
-	nfgenTupleIpV4SrcAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
-	nfgenTupleIpV4DstAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
+	nfgenTupleIPAttr := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_IP, int(SizeOfNestedTupleIP))
+	nfgenTupleIPV4SrcAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
+	nfgenTupleIPV4DstAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
 	nfgenTupleProto := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_PROTO, int(SizeOfNestedTupleProto))
 	nfgenTupleProtoNum := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, int(protoNum.Length()))
 	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
@@ -188,10 +183,10 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 
 	nfgendata := nfgen.ToWireFormat()
 	nfgendata = append(nfgendata, nfgenTupleOrigAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpV4SrcAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPV4SrcAttr.ToWireFormat()...)
 	nfgendata = append(nfgendata, ipv4ValueSrc.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIpV4DstAttr.ToWireFormat()...)
+	nfgendata = append(nfgendata, nfgenTupleIPV4DstAttr.ToWireFormat()...)
 	nfgendata = append(nfgendata, ipv4ValueDst.ToWireFormat()...)
 	nfgendata = append(nfgendata, nfgenTupleProto.ToWireFormat()...)
 	nfgendata = append(nfgendata, nfgenTupleProtoNum.ToWireFormat()...)
@@ -251,7 +246,7 @@ func appendProtoInfo(hdr *syscall.NlMsghdr) []byte {
 	return data
 }
 
-// To send and receive netlink messages
+// SendMessage -- To send and receive netlink messages
 // calls the private function sendmessage
 func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 	return h.sendMessage(hdr, data)

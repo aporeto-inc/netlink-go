@@ -61,7 +61,7 @@ type NfQueue struct {
 	Syscalls            syscallwrappers.Syscalls
 }
 
-var native binary.ByteOrder = nil
+var native binary.ByteOrder
 
 //NewNFQueue -- create a new NfQueue handle
 func NewNFQueue() NFQueue {
