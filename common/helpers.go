@@ -244,7 +244,6 @@ func NetlinkMessageToNfGenStruct(buf []byte) (*NfqGenMsg, []byte, error) {
 
 //NetlinkMessageToNfAttrStruct -- Convert byte slice representing nfattr to nfattr struct slice
 func NetlinkMessageToNfAttrStruct(buf []byte, hdr *NfAttrSlice) (*NfAttrSlice, []byte, error) {
-	//hdr := make([]*NfAttrResponsePayload, nfqaMax)
 	i := 0
 	for i < len(buf) {
 		if (i + 4) > len(buf) {
