@@ -181,22 +181,23 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
 	nfgenTupleDstPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, int(dstPort.Length()))
 
-	nfgendata := nfgen.ToWireFormat()
-	nfgendata = append(nfgendata, nfgenTupleOrigAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIPAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIPV4SrcAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, ipv4ValueSrc.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleIPV4DstAttr.ToWireFormat()...)
-	nfgendata = append(nfgendata, ipv4ValueDst.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleProto.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleProtoNum.ToWireFormat()...)
-	nfgendata = append(nfgendata, protoNum.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleSrcPort.ToWireFormat()...)
-	nfgendata = append(nfgendata, srcPort.ToWireFormat()...)
-	nfgendata = append(nfgendata, nfgenTupleDstPort.ToWireFormat()...)
-	nfgendata = append(nfgendata, dstPort.ToWireFormat()...)
+	buf := make([]byte, 3*int(common.SizeofNfAttr)+int(common.SizeofNfGenMsg)+2*int(common.NfaLength(uint16(common.SizeOfValue32)))+2*int(common.NfaLength(uint16(common.SizeOfValue16)))+int(common.NfaLength(uint16(common.SizeOfValue8))))
+	copyIndex := nfgen.ToWireFormatBuf(buf)
+	copyIndex += nfgenTupleOrigAttr.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleIPAttr.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleIPV4SrcAttr.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += ipv4ValueSrc.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleIPV4DstAttr.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += ipv4ValueDst.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleProto.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleProtoNum.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += protoNum.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleSrcPort.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += srcPort.ToWireFormatBuf(buf[copyIndex:])
+	copyIndex += nfgenTupleDstPort.ToWireFormatBuf(buf[copyIndex:])
+	dstPort.ToWireFormatBuf(buf[copyIndex:])
 
-	return hdr, nfgendata
+	return hdr, buf
 }
 
 // appendMark will add the given mark to the flows
