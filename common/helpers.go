@@ -183,6 +183,12 @@ func (r *NfValue8) ToWireFormat() []byte {
 	return buf
 }
 
+//ToWireFormatBuf -- Convert NfValue8 to byte and copy to passed buffer
+func (r *NfValue8) ToWireFormatBuf(buf []byte) int {
+	buf[0] = r.value
+	return int(r.Length())
+}
+
 //ToWireFormat -- Convert NfValue16 to byte slice
 func (r *NfValue16) ToWireFormat() []byte {
 	buf := make([]byte, int(SizeOfValue32))
@@ -190,12 +196,23 @@ func (r *NfValue16) ToWireFormat() []byte {
 	return buf
 }
 
+//ToWireFormatBuf -- Convert NfValue16 to byte and copy to passed buffer
+func (r *NfValue16) ToWireFormatBuf(buf []byte) int {
+	binary.BigEndian.PutUint16(buf, r.value)
+	return int(r.Length())
+}
+
 //ToWireFormat -- Convert NfValue32 to byte slice
 func (r *NfValue32) ToWireFormat() []byte {
-
 	buf := make([]byte, int(SizeOfValue32))
 	binary.BigEndian.PutUint32(buf, r.value)
 	return buf
+}
+
+//ToWireFormatBuf -- Convert NfValue32 to byte and copy to passed buffer
+func (r *NfValue32) ToWireFormatBuf(buf []byte) int {
+	binary.BigEndian.PutUint32(buf, r.value)
+	return int(r.Length())
 }
 
 //Length -- Return length of struct
@@ -210,12 +227,12 @@ func (r *NfValue32) Length() uint32 {
 
 //Length -- Return length of struct
 func (r *NfValue16) Length() uint16 {
-	return uint16(unsafe.Sizeof(NfValue16{}))
+	return uint16(unsafe.Sizeof(NfValue32{}))
 }
 
 //Length -- Return length of struct
 func (r *NfValue8) Length() uint8 {
-	return uint8(unsafe.Sizeof(NfValue8{}))
+	return uint8(unsafe.Sizeof(NfValue32{}))
 }
 
 //NetlinkMessageToStruct -- Convert netlink message byte slice to struct and payload
