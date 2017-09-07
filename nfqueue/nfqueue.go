@@ -151,7 +151,7 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 		Onoff:  1,
 		Linger: 0,
 	}
-	syscall.SetSockoptLinger(fd, syscall.SOL_SOCKET, syscall.SO_LINGER, lingerconf)
+	syscall.SetsockoptLinger(fd, syscall.SOL_SOCKET, syscall.SO_LINGER, lingerconf)
 	q.queueHandle = nfqHandle
 	return nfqHandle, nil
 }
