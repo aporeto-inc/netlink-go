@@ -11,6 +11,7 @@ type Verdict interface {
 	SetVerdict2(queueNum uint32, verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte)
 	SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, packetID uint32, packet []byte)
 	GetNotificationChannel() chan *NFPacket
+	StopQueue() error
 }
 
 //NFQueue -- Interface exposing internal Nfqueue functions. This is needed if we want to create and manage queues. Instead of calling the CreateAndStart function directly from the package

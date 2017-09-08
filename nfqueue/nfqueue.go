@@ -543,6 +543,15 @@ func (q *NfQueue) NfqClose() {
 
 }
 
+//StopQueue -- Destroy queue and close socket
+func (q *NfQueue) StopQueue() error {
+	if err := q.NfqDestroyQueue(); err != nil {
+		return err
+	}
+	q.queueHandle.close()
+	return nil
+}
+
 //NfqDestroyQueue -- unbind queue
 func (q *NfQueue) NfqDestroyQueue() error {
 	config := &NfqMsgConfigCommand{
