@@ -65,7 +65,7 @@ func (d *NfAttrResponsePayload) GetNetlinkData() []byte {
 }
 
 // GetNetlinkDataArray -- Get netlink data from array
-func GetNetlinkDataArray(index int, d []*NfAttrResponsePayload) []byte {
+func GetNetlinkDataArray(index int, d *NfAttrSlice) []byte {
 	return d[index].data
 }
 
