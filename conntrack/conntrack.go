@@ -45,6 +45,13 @@ func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.Conn
 	for i := range flows {
 		isEntryPresent := checkTuplesInFlow(flows[i], ipSrc, ipDst, protonum, srcport, dstport)
 
+		// HACK replace with real logic
+		if dstport == 0 {
+			fmt.Println("Replacing destination flow ", dstport, flows[i].Forward.DstPort)
+			fmt.Printf("Flow is %+v\n", *flows[i])
+			dstport = flows[i].Forward.DstPort
+		}
+
 		if isEntryPresent && newmark != 0 {
 			err := h.ConntrackTableUpdateMark(ipSrc, ipDst, protonum, srcport, dstport, newmark)
 			if err != nil {
@@ -116,43 +123,37 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 // returns true if the table has the given flow, false otherwise
 func checkTuplesInFlow(flow *netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16) bool {
 
-	var isSrcIPPresent, isDstIPPresent, isProtoPresent, isSrcPortPresent, isDstPortPresent bool
-
-	if common.IP2int(flow.Forward.SrcIP) == common.IP2int(net.ParseIP(ipSrc)) && common.IP2int(flow.Reverse.SrcIP) == common.IP2int(net.ParseIP(ipDst)) {
-		isSrcIPPresent = true
-	} else {
-		isSrcIPPresent = false
+	if ipSrc != "" {
+		if common.IP2int(flow.Forward.SrcIP) != common.IP2int(net.ParseIP(ipSrc)) || common.IP2int(flow.Reverse.SrcIP) != common.IP2int(net.ParseIP(ipDst)) {
+			return false
+		}
 	}
 
-	if common.IP2int(flow.Forward.DstIP) == common.IP2int(net.ParseIP(ipDst)) && common.IP2int(flow.Reverse.DstIP) == common.IP2int(net.ParseIP(ipSrc)) {
-		isDstIPPresent = true
-	} else {
-		isDstIPPresent = false
+	if ipDst != "" {
+		if common.IP2int(flow.Forward.DstIP) != common.IP2int(net.ParseIP(ipDst)) || common.IP2int(flow.Reverse.DstIP) != common.IP2int(net.ParseIP(ipSrc)) {
+			return false
+		}
 	}
 
-	if flow.Forward.Protocol == protonum && flow.Reverse.Protocol == protonum {
-		isProtoPresent = true
-	} else {
-		isProtoPresent = false
+	if protonum != 0 {
+		if flow.Forward.Protocol != protonum || flow.Reverse.Protocol != protonum {
+			return false
+		}
 	}
 
-	if flow.Forward.SrcPort == srcport && flow.Reverse.SrcPort == dstport {
-		isSrcPortPresent = true
-	} else {
-		isSrcPortPresent = false
+	if srcport != 0 {
+		if flow.Forward.SrcPort != srcport || flow.Reverse.SrcPort != dstport {
+			return false
+		}
 	}
 
-	if flow.Forward.DstPort == dstport && flow.Reverse.DstPort == srcport {
-		isDstPortPresent = true
-	} else {
-		isDstPortPresent = false
+	if dstport != 0 {
+		if flow.Forward.DstPort != dstport || flow.Reverse.DstPort != srcport {
+			return false
+		}
 	}
 
-	if isSrcIPPresent && isDstIPPresent && isSrcPortPresent && isDstPortPresent && isProtoPresent {
-		return true
-	}
-
-	return false
+	return true
 }
 
 // buildConntrackUpdateRequest is generic for all conntrack attribute updates
