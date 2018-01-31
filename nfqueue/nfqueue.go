@@ -1,6 +1,7 @@
 package nfqueue
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"syscall"
@@ -86,7 +87,7 @@ func NewNFQueue() NFQueue {
 //maxPacketsInQueue -- max number of packets in Queue
 //packetSize -- The max expected packetsize
 //privateData -- We will return this on NFpacket.Opaque data for this system.
-func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) (Verdict, error) {
+func CreateAndStartNfQueue(ctx context.Context, queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) (Verdict, error) {
 
 	queuingHandle := NewNFQueue()
 
@@ -117,7 +118,7 @@ func CreateAndStartNfQueue(queueID uint16, maxPacketsInQueue uint32, packetSize 
 		queuingHandle.NfqClose()
 		return nil, fmt.Errorf("Unable to set max packets in queue: %v ", err)
 	}
-	go queuingHandle.ProcessPackets()
+	go queuingHandle.ProcessPackets(ctx)
 	return queuingHandle, nil
 }
 
@@ -459,33 +460,36 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, er
 }
 
 //ProcessPackets -- Function to wait on socket to receive packets and post it back to channel
-func (q *NfQueue) ProcessPackets() {
+func (q *NfQueue) ProcessPackets(ctx context.Context) {
 	for {
-		nfgenmsg, attr, err := q.Recv()
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			nfgenmsg, attr, err := q.Recv()
 
-		if err != nil {
-			if q.errorCallback != nil {
-				q.errorCallback(fmt.Errorf("Netlink error %v", err), nfgenmsg)
-				continue
-			} else {
-				fmt.Println("Received Error from netlink", err)
-				if nfgenmsg != nil {
-					fmt.Println(nfgenmsg.GetNfgenFamily())
+			if err != nil {
+				if q.errorCallback != nil {
+					q.errorCallback(fmt.Errorf("Netlink error %v", err), nfgenmsg)
+					continue
+				} else {
+					fmt.Println("Received Error from netlink", err)
+					if nfgenmsg != nil {
+						fmt.Println(nfgenmsg.GetNfgenFamily())
+					}
 				}
 			}
+
+			packetid, mark, packet := GetPacketInfo(attr)
+
+			q.callback(&NFPacket{
+				Buffer:      packet,
+				Mark:        mark,
+				QueueHandle: q,
+				ID:          packetid,
+			}, q.privateData)
 		}
-
-		packetid, mark, packet := GetPacketInfo(attr)
-
-		q.callback(&NFPacket{
-			Buffer:      packet,
-			Mark:        mark,
-			QueueHandle: q,
-			ID:          packetid,
-		}, q.privateData)
-
 	}
-
 }
 
 //BindPf -- Bind to a PF family
