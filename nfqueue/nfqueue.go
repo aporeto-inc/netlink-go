@@ -464,6 +464,7 @@ func (q *NfQueue) ProcessPackets(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			q.NfqClose()
 			return
 		default:
 			nfgenmsg, attr, err := q.Recv()
