@@ -88,7 +88,6 @@ func NewNFQueue() NFQueue {
 //packetSize -- The max expected packetsize
 //privateData -- We will return this on NFpacket.Opaque data for this system.
 func CreateAndStartNfQueue(ctx context.Context, queueID uint16, maxPacketsInQueue uint32, packetSize uint32, callback func(*NFPacket, interface{}), errorCallback func(err error, data interface{}), privateData interface{}) (Verdict, error) {
-
 	queuingHandle := NewNFQueue()
 
 	var err error
