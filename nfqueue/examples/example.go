@@ -6,6 +6,7 @@
 package main
 
 import (
+	"context"
 	"time"
 
 	"github.com/aporeto-inc/netlink-go/nfqueue"
@@ -31,10 +32,10 @@ func main() {
 	nfqAppHdl := make([]nfqueue.Verdict, 2)
 	nfqNetHdl := make([]nfqueue.Verdict, 2)
 	for i := 10; i < 12; i++ {
-		nfqAppHdl[i-10], _ = nfqueue.CreateAndStartNfQueue(uint16(i), 2000, 0xffff, passVerdict, errorCallback, nil)
+		nfqAppHdl[i-10], _ = nfqueue.CreateAndStartNfQueue(context.Background(), uint16(i), 2000, 0xffff, passVerdict, errorCallback, nil)
 	}
 	for i := 12; i < 14; i++ {
-		nfqNetHdl[i-12], _ = nfqueue.CreateAndStartNfQueue(uint16(i), 2000, 0xffff, passNetVerdict, errorCallback, nil)
+		nfqNetHdl[i-12], _ = nfqueue.CreateAndStartNfQueue(context.Background(), uint16(i), 2000, 0xffff, passNetVerdict, errorCallback, nil)
 	}
 
 	for {
