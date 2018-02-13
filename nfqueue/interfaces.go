@@ -1,6 +1,7 @@
 package nfqueue
 
 import (
+	"context"
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
@@ -26,7 +27,7 @@ type NFQueue interface {
 	NfqClose()
 	NfqDestroyQueue() error
 	Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error)
-	ProcessPackets()
+	ProcessPackets(ctx context.Context)
 	BindPf() error
 	setSockHandle(handle SockHandle) //private unexported function for tests
 }
