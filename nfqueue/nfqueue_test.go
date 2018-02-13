@@ -1,6 +1,7 @@
 package nfqueue
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"syscall"
@@ -605,7 +606,7 @@ func TestProcessPackets(t *testing.T) {
 		Convey("When I try to process packets, I expect the callback to be called", func() {
 			mockSyscalls.EXPECT().Recvfrom(3, newNFQ.(*NfQueue).buf, 256).AnyTimes().Return(120, nil, nil)
 			mockSyscalls.EXPECT().Syscall(uintptr(46), uintptr(3), gomock.Any(), uintptr(0)).AnyTimes()
-			newNFQ.ProcessPackets()
+			newNFQ.ProcessPackets(context.Background())
 		})
 	})
 }
