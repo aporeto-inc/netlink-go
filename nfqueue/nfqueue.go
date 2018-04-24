@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/aporeto-inc/trireme-lib/utils/panicrecovery"
+
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
@@ -460,6 +462,8 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, er
 
 //ProcessPackets -- Function to wait on socket to receive packets and post it back to channel
 func (q *NfQueue) ProcessPackets(ctx context.Context) {
+
+	defer panicrecovery.HandleEventualPanic("ProcessPackets")
 	for {
 		select {
 		case <-ctx.Done():
