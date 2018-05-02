@@ -13,7 +13,7 @@ import (
 
 // Iproute is the wrapper around netlinkHandle
 type Iproute struct {
-	socketHandlers sockets.SockHandles
+	socketHandlers *sockets.SockHandles
 }
 
 // NewIPRouteHandle returns a reference IpRoute structure
@@ -37,11 +37,11 @@ func (i *Iproute) AddRule(rule *netlink.Rule) error {
 	maskbuf := markMaskAttrToWire(uint32(rule.Mask))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf)+len(maskbuf))
 
-	buf = append(buf, rtmsgbuf...)
+	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, markbuf...)
 	buf = append(buf, maskbuf...)
 	buf = append(buf, priobuf...)
-	return send(nlmsghdr, buf)
+	return i.send(nlmsghdr, buf)
 }
 
 // DeleteRule  deletes a rule from the rule table
@@ -58,10 +58,10 @@ func (i *Iproute) DeleteRule(rule *netlink.Rule) error {
 	markbuf := markAttrToWire(uint32(rule.Mark))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf))
 
-	buf = append(buf, rtmsgbuf...)
+	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, priobuf...)
 	buf = append(buf, markbuf...)
-	return send(nlmsghdr, buf)
+	return i.send(nlmsghdr, buf)
 }
 
 // AddRoute add a route a specific table
@@ -80,7 +80,7 @@ func (i *Iproute) AddRoute(route *netlink.Route) error {
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(nlmsghdr, buf)
+	return i.send(nlmsghdr, buf)
 }
 
 // DeleteRoute deletes the route from a specific table.
@@ -99,7 +99,7 @@ func (i *Iproute) DeleteRoute(route *netlink.Route) error {
 	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(nlmsghdr, buf)
+	return i.send(nlmsghdr, buf)
 }
 
 func (i *Iproute) send(hdr *syscall.NlMsghdr, data []byte) error {

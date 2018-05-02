@@ -254,7 +254,7 @@ func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 }
 
 func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
-	_, err := h.socketHandlers.Open()
+	_, err := h.socketHandlers.Open(syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
 		return err
 	}
@@ -264,11 +264,11 @@ func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 		Data:   data,
 	}
 
-	err = h.soccketHandlers.Query(netlinkMsg)
+	err = h.socketHandlers.Query(netlinkMsg)
 	if err != nil {
 		return err
 	}
 
-	s.socketHandlers.close()
+	h.socketHandlers.close()
 	return nil
 }
