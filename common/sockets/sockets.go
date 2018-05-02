@@ -17,7 +17,7 @@ func NewSocketHandlers() *SockHandles {
 	}
 }
 
-func (sh *SockHandles) Open(socketType, proto string) (*SockHandles, error) {
+func (sh *SockHandles) Open(socketType, proto int) (*SockHandles, error) {
 
 	fd, err := sh.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
 	if err != nil {
