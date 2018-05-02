@@ -13,7 +13,7 @@ import (
 
 // Iproute is the wrapper around netlinkHandle
 type Iproute struct {
-	socketHandlers *sockets.SockHandles
+	socketHandlers sockets.SockHandle
 }
 
 // NewIPRouteHandle returns a reference IpRoute structure

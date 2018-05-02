@@ -11,5 +11,5 @@ import (
 //SockHandles --  Sock handle of netlink socket
 type Handles struct {
 	Syscalls       syscallwrappers.Syscalls
-	socketHandlers *sockets.SockHandles
+	socketHandlers sockets.SockHandle
 }

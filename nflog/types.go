@@ -18,7 +18,7 @@ type NfLog struct {
 	CopyRange     uint16
 	callback      func(buf *NfPacket, data interface{})
 	errorCallback func(err error)
-	Socket        *sockets.SockHandles
+	Socket        sockets.SockHandle
 	NflogHandle   NFLog
 	Syscalls      syscallwrappers.Syscalls
 }
