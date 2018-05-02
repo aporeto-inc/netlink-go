@@ -10,13 +10,15 @@ import (
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
-func NewSocketHandlers() *SockHandles {
+// NewSocketHandlers creates a handler for sockets
+func NewSocketHandlers() SockHandle {
 
 	return &SockHandles{
 		Syscalls: syscallwrappers.NewSyscalls(),
 	}
 }
 
+// Open opens a socket and returns the handler
 func (sh *SockHandles) Open(socketType, proto int) (*SockHandles, error) {
 
 	fd, err := sh.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
@@ -35,6 +37,7 @@ func (sh *SockHandles) Open(socketType, proto int) (*SockHandles, error) {
 	return sh, nil
 }
 
+// Query sends and waits for netlink response
 func (sh *SockHandles) Query(msg *syscall.NetlinkMessage) error {
 	err := sh.Send(msg)
 	if err != nil {
@@ -44,6 +47,7 @@ func (sh *SockHandles) Query(msg *syscall.NetlinkMessage) error {
 	return sh.Recv()
 }
 
+// Recv receives the response from netlink
 func (sh *SockHandles) Recv() error {
 	buf := sh.buf
 	n, _, err := sh.Syscalls.Recvfrom(sh.fd, buf, 0)
@@ -70,6 +74,7 @@ func (sh *SockHandles) Recv() error {
 	return nil
 }
 
+// Send sends message to kernel
 func (sh *SockHandles) Send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	sh.buf = buf
@@ -82,18 +87,22 @@ func (sh *SockHandles) Send(msg *syscall.NetlinkMessage) error {
 	return sh.Syscalls.Sendto(sh.fd, buf, 0, &sh.lsa)
 }
 
+// GetFd gets the fd
 func (sh *SockHandles) GetFd() int {
 	return sh.fd
 }
 
+// GetFd gets the rcvbufsize
 func (sh *SockHandles) GetRcvBufSize() uint32 {
 	return sh.rcvbufSize
 }
 
+// GetLocalAddress gets tje local address
 func (sh *SockHandles) GetLocalAddress() syscall.SockaddrNetlink {
 	return sh.lsa
 }
 
+// Close closes the socket
 func (sh *SockHandles) Close() {
 	sh.Syscalls.Close(sh.fd)
 }

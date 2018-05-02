@@ -3,8 +3,6 @@
 package conntrack
 
 import (
-	"syscall"
-
 	"github.com/vishvananda/netlink"
 )
 
@@ -20,15 +18,4 @@ type Conntrack interface {
 	ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) error
 	// ConntrackTableUpdateLabel is used to update conntrack label attribute in the kernel
 	ConntrackTableUpdateLabel(table netlink.ConntrackTableType, flows []*netlink.ConntrackFlow, ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newlabels uint32) (int, error)
-}
-
-// SockHandle Opaque interface with unexported functions
-type SockHandle interface {
-	query(msg *syscall.NetlinkMessage) error
-	recv() error
-	send(msg *syscall.NetlinkMessage) error
-	getFd() int
-	getRcvBufSize() uint32
-	getLocalAddress() syscall.SockaddrNetlink
-	close()
 }
