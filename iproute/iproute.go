@@ -15,7 +15,7 @@ type Iproute struct {
 }
 
 // NewIPRouteHandle returns a reference IpRoute structure
-func NewIPRouteHandle() (*Iproute, error) {
+func NewIPRouteHandle() (IPRoute, error) {
 	return &Iproute{}, nil
 
 }
