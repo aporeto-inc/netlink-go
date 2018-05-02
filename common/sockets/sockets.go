@@ -92,12 +92,12 @@ func (sh *SockHandles) GetFd() int {
 	return sh.fd
 }
 
-// GetFd gets the rcvbufsize
+// GetRcvBufSize gets the rcvbufsize
 func (sh *SockHandles) GetRcvBufSize() uint32 {
 	return sh.rcvbufSize
 }
 
-// GetLocalAddress gets tje local address
+// GetLocalAddress gets the local address
 func (sh *SockHandles) GetLocalAddress() syscall.SockaddrNetlink {
 	return sh.lsa
 }
