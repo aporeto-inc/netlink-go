@@ -10,16 +10,16 @@ import (
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
-func NewSocketHandlers() SockHandles {
+func NewSocketHandlers() *SockHandles {
 
 	return &SockHandles{
 		Syscalls: syscallwrappers.NewSyscalls(),
 	}
 }
 
-func (sh *SockHandles) Open(socketType,proto string) (SockHandles, error) {
+func (sh *SockHandles) Open(socketType, proto string) (*SockHandles, error) {
 
-	fd, err := h.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
+	fd, err := sh.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +36,12 @@ func (sh *SockHandles) Open(socketType,proto string) (SockHandles, error) {
 }
 
 func (sh *SockHandles) Query(msg *syscall.NetlinkMessage) error {
-	err := sh.send(msg)
+	err := sh.Send(msg)
 	if err != nil {
 		return err
 	}
 
-	return sh.recv()
+	return sh.Recv()
 }
 
 func (sh *SockHandles) Recv() error {

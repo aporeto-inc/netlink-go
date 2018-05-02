@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/vishvananda/netlink"
 )
 
@@ -40,7 +41,7 @@ func (i *Iproute) AddRule(rule *netlink.Rule) error {
 	buf = append(buf, markbuf...)
 	buf = append(buf, maskbuf...)
 	buf = append(buf, priobuf...)
-	return send(nlmsghdr,buf)
+	return send(nlmsghdr, buf)
 }
 
 // DeleteRule  deletes a rule from the rule table
@@ -60,7 +61,7 @@ func (i *Iproute) DeleteRule(rule *netlink.Rule) error {
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, priobuf...)
 	buf = append(buf, markbuf...)
-	return send(nlmsghdr,buf)
+	return send(nlmsghdr, buf)
 }
 
 // AddRoute add a route a specific table
@@ -79,7 +80,7 @@ func (i *Iproute) AddRoute(route *netlink.Route) error {
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(nlmsghdr,buf)
+	return send(nlmsghdr, buf)
 }
 
 // DeleteRoute deletes the route from a specific table.
@@ -98,12 +99,12 @@ func (i *Iproute) DeleteRoute(route *netlink.Route) error {
 	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(nlmsghdr,buf)
+	return send(nlmsghdr, buf)
 }
 
-func (i *Iproute) send(hdr*syscall.NlMsghdr,data []byte) error {
+func (i *Iproute) send(hdr *syscall.NlMsghdr, data []byte) error {
 
-	_, err := i.socketHandlers.Open(syscall.SOCK_DGRAM,syscall.NETLINK_ROUTE)
+	_, err := i.socketHandlers.Open(syscall.SOCK_DGRAM, syscall.NETLINK_ROUTE)
 	if err != nil {
 		return err
 	}
@@ -113,7 +114,7 @@ func (i *Iproute) send(hdr*syscall.NlMsghdr,data []byte) error {
 		Data:   data,
 	}
 
-	err = i.soccketHandlers.Query(netlinkMsg)
+	err = i.socketHandlers.Query(netlinkMsg)
 	if err != nil {
 		return err
 	}

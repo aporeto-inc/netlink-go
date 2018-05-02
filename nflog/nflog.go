@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -19,7 +20,7 @@ import (
 func NewNFLog() NFLog {
 	n := &NfLog{
 		Syscalls: syscallwrappers.NewSyscalls(),
-		Socket:sockets.NewSocketHandlers(),
+		Socket:   sockets.NewSocketHandlers(),
 	}
 	return n
 }

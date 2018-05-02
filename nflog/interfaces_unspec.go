@@ -2,11 +2,15 @@
 
 package nflog
 
+import (
+	"github.com/aporeto-inc/netlink-go/common/sockets"
+)
+
 // NFLog -- This is the interface which has all the necessary functions to read logs from kernel
 // This is needed if we don't want to call BindAndListenForLogs()
 // Useful for testing and debugging
 type NFLog interface {
-	NFlogOpen() (SockHandle, error)
+	NFlogOpen() (sockets.SockHandles, error)
 	NFlogUnbind() error
 	NFlogBind() error
 	NFlogBindGroup(group []uint16, data func(packet *NfPacket, callback interface{}), errorCallback func(err error)) error
