@@ -77,7 +77,7 @@ func (i *Iproute) AddRoute(route *netlink.Route) error {
 	devbuf := ipifindexToWire(uint32(route.LinkIndex))
 
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(ipbuf)+len(devbuf))
-	buf = append(buf, rtmsgbuf...)
+	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
 	return i.send(nlmsghdr, buf)

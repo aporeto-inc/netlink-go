@@ -269,6 +269,6 @@ func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 		return err
 	}
 
-	h.socketHandlers.close()
+	h.socketHandlers.Close()
 	return nil
 }
