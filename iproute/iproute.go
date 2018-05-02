@@ -12,11 +12,12 @@ import (
 
 // Iproute is the wrapper around netlinkHandle
 type Iproute struct {
+	socketHandlers sockets.SockHandles
 }
 
 // NewIPRouteHandle returns a reference IpRoute structure
 func NewIPRouteHandle() (IPRoute, error) {
-	return &Iproute{}, nil
+	return &Iproute{socketHandlers: sockets.NewSocketHandlers()}, nil
 
 }
 
@@ -34,13 +35,12 @@ func (i *Iproute) AddRule(rule *netlink.Rule) error {
 	markbuf := markAttrToWire(uint32(rule.Mark))
 	maskbuf := markMaskAttrToWire(uint32(rule.Mask))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf)+len(maskbuf))
-	buf := common.SerializeNlMsgHdr(nlmsghdr)
 
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, markbuf...)
 	buf = append(buf, maskbuf...)
 	buf = append(buf, priobuf...)
-	return send(buf)
+	return send(nlmsghdr,buf)
 }
 
 // DeleteRule  deletes a rule from the rule table
@@ -56,12 +56,11 @@ func (i *Iproute) DeleteRule(rule *netlink.Rule) error {
 	priobuf := priorityAttrToWire(uint32(rule.Priority))
 	markbuf := markAttrToWire(uint32(rule.Mark))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf))
-	//buf := make([]byte)
-	buf := common.SerializeNlMsgHdr(nlmsghdr)
+
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, priobuf...)
 	buf = append(buf, markbuf...)
-	return send(buf)
+	return send(nlmsghdr,buf)
 }
 
 // AddRoute add a route a specific table
@@ -77,11 +76,10 @@ func (i *Iproute) AddRoute(route *netlink.Route) error {
 	devbuf := ipifindexToWire(uint32(route.LinkIndex))
 
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(ipbuf)+len(devbuf))
-	buf := common.SerializeNlMsgHdr(nlmsghdr)
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(buf)
+	return send(nlmsghdr,buf)
 }
 
 // DeleteRoute deletes the route from a specific table.
@@ -97,9 +95,30 @@ func (i *Iproute) DeleteRoute(route *netlink.Route) error {
 	devbuf := ipifindexToWire(uint32(route.LinkIndex))
 
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(ipbuf)+len(devbuf))
-	buf := common.SerializeNlMsgHdr(nlmsghdr)
-	buf = append(buf, rtmsgbuf...)
+	buf := append(buf, rtmsgbuf...)
 	buf = append(buf, ipbuf...)
 	buf = append(buf, devbuf...)
-	return send(buf)
+	return send(nlmsghdr,buf)
+}
+
+func (i *Iproute) send(hdr*syscall.NlMsghdr,data []byte) error {
+
+	_, err := i.socketHandlers.Open(syscall.SOCK_DGRAM,syscall.NETLINK_ROUTE)
+	if err != nil {
+		return err
+	}
+
+	netlinkMsg := &syscall.NetlinkMessage{
+		Header: *hdr,
+		Data:   data,
+	}
+
+	err = i.soccketHandlers.Query(netlinkMsg)
+	if err != nil {
+		return err
+	}
+
+	i.socketHandlers.Close()
+	return nil
+
 }

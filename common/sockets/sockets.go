@@ -1,17 +1,25 @@
 // +build linux !darwin
 
-package conntrack
+package sockets
 
 import (
 	"fmt"
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
-func (h *Handles) open() (SockHandle, error) {
-	sh := &SockHandles{Syscalls: h.Syscalls}
-	fd, err := h.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
+func NewSocketHandlers() SockHandles {
+
+	return &SockHandles{
+		Syscalls: syscallwrappers.NewSyscalls(),
+	}
+}
+
+func (sh *SockHandles) Open(socketType,proto string) (SockHandles, error) {
+
+	fd, err := h.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +27,7 @@ func (h *Handles) open() (SockHandle, error) {
 	sh.rcvbufSize = common.NfnlBuffSize
 	sh.lsa.Family = syscall.AF_NETLINK
 
-	err = h.Syscalls.Bind(fd, &sh.lsa)
+	err = sh.Syscalls.Bind(fd, &sh.lsa)
 	if err != nil {
 		return nil, err
 	}
@@ -27,15 +35,16 @@ func (h *Handles) open() (SockHandle, error) {
 	return sh, nil
 }
 
-func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {
+func (sh *SockHandles) Query(msg *syscall.NetlinkMessage) error {
 	err := sh.send(msg)
 	if err != nil {
 		return err
 	}
+
 	return sh.recv()
 }
 
-func (sh *SockHandles) recv() error {
+func (sh *SockHandles) Recv() error {
 	buf := sh.buf
 	n, _, err := sh.Syscalls.Recvfrom(sh.fd, buf, 0)
 	if err != nil {
@@ -61,7 +70,7 @@ func (sh *SockHandles) recv() error {
 	return nil
 }
 
-func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
+func (sh *SockHandles) Send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	sh.buf = buf
 	common.NativeEndian().PutUint32(buf[0:4], msg.Header.Len)
@@ -73,18 +82,18 @@ func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
 	return sh.Syscalls.Sendto(sh.fd, buf, 0, &sh.lsa)
 }
 
-func (sh *SockHandles) getFd() int {
+func (sh *SockHandles) GetFd() int {
 	return sh.fd
 }
 
-func (sh *SockHandles) getRcvBufSize() uint32 {
+func (sh *SockHandles) GetRcvBufSize() uint32 {
 	return sh.rcvbufSize
 }
 
-func (sh *SockHandles) getLocalAddress() syscall.SockaddrNetlink {
+func (sh *SockHandles) GetLocalAddress() syscall.SockaddrNetlink {
 	return sh.lsa
 }
 
-func (sh *SockHandles) close() {
+func (sh *SockHandles) Close() {
 	sh.Syscalls.Close(sh.fd)
 }
