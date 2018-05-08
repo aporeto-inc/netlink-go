@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aporeto-inc/netlink-go/nflog"
@@ -29,7 +30,10 @@ func main() {
 	groups = []uint16{32}
 	copyrange = 64
 
-	nflog.BindAndListenForLogs(groups, copyrange, packetCallback, errorCallback)
+	_, err := nflog.BindAndListenForLogs(groups, copyrange, packetCallback, errorCallback)
+	if err != nil {
+		log.Println(err)
+	}
 
 	for {
 		time.Sleep(100 * time.Second)

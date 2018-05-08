@@ -66,3 +66,7 @@ const (
 
 	SizeofMsgConfigMode uint32 = uint32(unsafe.Sizeof(NflMsgConfigMode{}))
 )
+
+const (
+	IPVersion = 4
+)

@@ -11,8 +11,7 @@ import (
 
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/aporeto-inc/trireme-lib/controller/pkg/packet"
 )
 
 // NewNFLog -- Create a new Nflog handle
@@ -296,31 +295,21 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 		case NFULA_PAYLOAD:
 			payload := make([]byte, NfaAlign16(payloadLen))
 			reader.Read(payload)
-			ipPacket := gopacket.NewPacket(payload, layers.LayerTypeIPv4, gopacket.Default)
-			ipLayer := ipPacket.Layer(layers.LayerTypeIPv4)
-			if ipLayer != nil {
-				ip, _ := ipLayer.(*layers.IPv4)
-				m.SrcIP = ip.SrcIP
-				m.DstIP = ip.DstIP
-				m.Version = ip.Version
-				m.Protocol = ip.Protocol
-				m.Length = ip.Length
+			ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "")
+			if err != nil {
+				return err
 			}
-			if m.Protocol.String() == "UDP" {
-				udpLayer := ipPacket.Layer(layers.LayerTypeUDP)
-				if udpLayer != nil {
-					udp, _ := udpLayer.(*layers.UDP)
-					m.SrcPort = int(udp.SrcPort)
-					m.DstPort = int(udp.DstPort)
-				}
-			} else if m.Protocol.String() == "TCP" {
-				tcpLayer := ipPacket.Layer(layers.LayerTypeTCP)
-				if tcpLayer != nil {
-					tcp, _ := tcpLayer.(*layers.TCP)
-					m.SrcPort = int(tcp.SrcPort)
-					m.DstPort = int(tcp.DstPort)
-				}
+
+			if ipPacket != nil {
+				m.SrcIP = ipPacket.SourceAddress
+				m.DstIP = ipPacket.DestinationAddress
+				m.Version = IPVersion
+				m.Protocol = ipPacket.IPProto
+				m.Length = ipPacket.IPTotalLength
+				m.SrcPort = ipPacket.SourcePort
+				m.DstPort = ipPacket.DestinationPort
 			}
+
 			m.Payload = payload[:payloadLen]
 
 			nl.callback(&NfPacket{
