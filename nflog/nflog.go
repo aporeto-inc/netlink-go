@@ -11,7 +11,6 @@ import (
 
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
-	"github.com/aporeto-inc/trireme-lib/controller/pkg/packet"
 )
 
 // NewNFLog -- Create a new Nflog handle
@@ -295,10 +294,10 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 		case NFULA_PAYLOAD:
 			payload := make([]byte, NfaAlign16(payloadLen))
 			reader.Read(payload)
-			ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "")
-			if err != nil {
-				return err
-			}
+			// ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "")
+			// if err != nil {
+			// 	return err
+			// }
 
 			// if ipPacket != nil {
 			// 	m.SrcIP = ipPacket.SourceAddress
