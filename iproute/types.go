@@ -1,3 +1,5 @@
+// +build linux !darwin
+
 package iproute
 
 import (
@@ -33,10 +35,10 @@ type Rule struct {
 // Scope is an enum representing a route scope.
 type Scope uint8
 
-// NextHopFlag...
+// NextHopFlag ...
 type NextHopFlag int
 
-// Destination...
+// Destination ...
 type Destination interface {
 	Family() int
 	Decode([]byte) error
@@ -45,7 +47,7 @@ type Destination interface {
 	Equal(Destination) bool
 }
 
-// Encap...
+// Encap ...
 type Encap interface {
 	Type() int
 	Decode([]byte) error
@@ -82,7 +84,7 @@ type RouteUpdate struct {
 	Route
 }
 
-// NexthopInfo...
+// NexthopInfo ...
 type NexthopInfo struct {
 	LinkIndex int
 	Hops      int
