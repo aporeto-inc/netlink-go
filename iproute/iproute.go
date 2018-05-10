@@ -30,11 +30,7 @@ func (i *Iproute) AddRule(rule *Rule) error {
 	markbuf := markAttrToWire(uint32(rule.Mark))
 	maskbuf := markMaskAttrToWire(uint32(rule.Mask))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf)+len(maskbuf))
-	var buf []byte
-	buf = append(buf, rtmsgbuf...)
-	buf = append(buf, markbuf...)
-	buf = append(buf, maskbuf...)
-	buf = append(buf, priobuf...)
+	buf := createNetlinkPayloadBuf(rtmsgbuf, markbuf, maskbuf, priobuf)
 
 	return i.send(nlmsghdr, buf)
 }
@@ -52,10 +48,7 @@ func (i *Iproute) DeleteRule(rule *Rule) error {
 	priobuf := priorityAttrToWire(uint32(rule.Priority))
 	markbuf := markAttrToWire(uint32(rule.Mark))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(priobuf)+len(markbuf))
-	var buf []byte
-	buf = append(buf, rtmsgbuf...)
-	buf = append(buf, priobuf...)
-	buf = append(buf, markbuf...)
+	buf := createNetlinkPayloadBuf(rtmsgbuf, priobuf, markbuf)
 
 	return i.send(nlmsghdr, buf)
 }
@@ -72,10 +65,8 @@ func (i *Iproute) AddRoute(route *Route) error {
 	ipbuf := ipgwToWire(route.Gw)
 	devbuf := ipifindexToWire(uint32(route.LinkIndex))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(ipbuf)+len(devbuf))
-	var buf []byte
-	buf = append(buf, rtmsgbuf...)
-	buf = append(buf, ipbuf...)
-	buf = append(buf, devbuf...)
+	buf := createNetlinkPayloadBuf(rtmsgbuf, ipbuf, devbuf)
+
 	return i.send(nlmsghdr, buf)
 }
 
@@ -91,10 +82,8 @@ func (i *Iproute) DeleteRoute(route *Route) error {
 	ipbuf := ipgwToWire(route.Gw)
 	devbuf := ipifindexToWire(uint32(route.LinkIndex))
 	nlmsghdr.Len = syscall.SizeofNlMsghdr + uint32(len(rtmsgbuf)+len(ipbuf)+len(devbuf))
-	var buf []byte
-	buf = append(buf, rtmsgbuf...)
-	buf = append(buf, ipbuf...)
-	buf = append(buf, devbuf...)
+	buf := createNetlinkPayloadBuf(rtmsgbuf, ipbuf, devbuf)
+
 	return i.send(nlmsghdr, buf)
 }
 

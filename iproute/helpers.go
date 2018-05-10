@@ -72,3 +72,13 @@ func ipifindexToWire(index uint32) []byte {
 
 	return buf
 }
+
+func createNetlinkPayloadBuf(bufs ...[]byte) []byte {
+
+	var buf []byte
+	for _, eachBuf := range bufs {
+		buf = append(buf, eachBuf...)
+	}
+
+	return buf
+}
