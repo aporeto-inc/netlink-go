@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -17,7 +18,10 @@ import (
 
 // NewNFLog -- Create a new Nflog handle
 func NewNFLog() NFLog {
-	n := &NfLog{Syscalls: syscallwrappers.NewSyscalls()}
+	n := &NfLog{
+		Syscalls: syscallwrappers.NewSyscalls(),
+		Socket:   sockets.NewSocketHandlers(),
+	}
 	return n
 }
 
@@ -61,19 +65,12 @@ func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfP
 // Open a new socket and return it in the NflogHandle.
 // The fd for the socket is stored in an unexported handle
 func (nl *NfLog) NFlogOpen() (NFLog, error) {
-	sh := &SockHandles{Syscalls: nl.Syscalls}
-	fd, err := nl.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
-	if err != nil {
-		return nil, err
-	}
-	sh.fd = fd
-	sh.rcvbufSize = common.NfnlBuffSize
-	sh.lsa.Family = syscall.AF_NETLINK
 
-	err = nl.Syscalls.Bind(fd, &sh.lsa)
+	sh, err := nl.Socket.Open(syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
 		return nil, err
 	}
+
 	nl.Socket = sh
 	nl.NflogHandle = nl
 
@@ -104,7 +101,7 @@ func (nl *NfLog) NFlogUnbind() error {
 	}
 
 	if nl.Socket != nil {
-		return nl.Socket.query(netlinkMsg)
+		return nl.Socket.Query(netlinkMsg)
 	}
 
 	return fmt.Errorf("NFlogOpen was not called. No Socket open")
@@ -134,7 +131,7 @@ func (nl *NfLog) NFlogBind() error {
 	}
 
 	if nl.Socket != nil {
-		return nl.Socket.query(netlinkMsg)
+		return nl.Socket.Query(netlinkMsg)
 	}
 
 	return fmt.Errorf("NFlogOpen was not called. No Socket open")
@@ -169,7 +166,7 @@ func (nl *NfLog) NFlogBindGroup(groups []uint16, callback func(*NfPacket, interf
 		}
 
 		if nl.Socket != nil {
-			err := nl.Socket.query(netlinkMsg)
+			err := nl.Socket.Query(netlinkMsg)
 			if err != nil {
 				return err
 			}
@@ -206,7 +203,7 @@ func (nl *NfLog) NFlogSetMode(groups []uint16, packetSize uint32) error {
 		}
 
 		if nl.Socket != nil {
-			err := nl.Socket.query(netlinkMsg)
+			err := nl.Socket.Query(netlinkMsg)
 			if err != nil {
 				return err
 			}
@@ -223,7 +220,7 @@ func (nl *NfLog) ReadLogs() {
 	buffer := make([]byte, 65536)
 
 	for {
-		s, _, err := nl.Syscalls.Recvfrom(nl.Socket.getFd(), buffer, 0)
+		s, _, err := nl.Syscalls.Recvfrom(nl.Socket.GetFd(), buffer, 0)
 
 		if err != nil {
 			if nl.errorCallback != nil {
@@ -349,6 +346,6 @@ func (nl *NfLog) GetNFloghandle() NFLog {
 // NFlogClose -- close the current socket
 func (nl *NfLog) NFlogClose() {
 	if nl.Socket != nil {
-		nl.Socket.close()
+		nl.Socket.Close()
 	}
 }

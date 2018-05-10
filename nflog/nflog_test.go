@@ -4,6 +4,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
@@ -21,7 +22,10 @@ func TestNFlogOpen(t *testing.T) {
 
 		Convey("When I try to open a socket ", func() {
 
-			newNflog.(*NfLog).Syscalls = mockSyscalls
+			sockets := &sockets.SockHandles{
+				Syscalls: mockSyscalls,
+			}
+			newNflog.(*NfLog).Socket = sockets
 
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 			mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
@@ -48,7 +52,10 @@ func TestNFlogUnbind(t *testing.T) {
 
 		Convey("When I try to Unbind a socket ", func() {
 
-			newNflog.(*NfLog).Syscalls = mockSyscalls
+			sockets := &sockets.SockHandles{
+				Syscalls: mockSyscalls,
+			}
+			newNflog.(*NfLog).Socket = sockets
 			buf := []byte{0x1C, 0x00, 0x00, 0x00, 0x01, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x08, 0x00, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00}
 
 			Convey("When I try to open a socket", func() {
@@ -86,7 +93,10 @@ func TestNFlogBind(t *testing.T) {
 
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 
-			newNflog.(*NfLog).Syscalls = mockSyscalls
+			sockets := &sockets.SockHandles{
+				Syscalls: mockSyscalls,
+			}
+			newNflog.(*NfLog).Socket = sockets
 			unbindbuf := []byte{0x1C, 0x00, 0x00, 0x00, 0x01, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x08, 0x00, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00}
 			bindbuf := []byte{0x1C, 0x00, 0x00, 0x00, 0x01, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x08, 0x00, 0x01, 0x00, 0x03, 0x00, 0x00, 0x00}
 

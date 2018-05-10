@@ -1,17 +1,27 @@
 // +build linux !darwin
 
-package conntrack
+package sockets
 
 import (
 	"fmt"
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
-func (h *Handles) open() (SockHandle, error) {
-	sh := &SockHandles{Syscalls: h.Syscalls}
-	fd, err := h.Syscalls.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
+// NewSocketHandlers creates a handler for sockets
+func NewSocketHandlers() SockHandle {
+
+	return &SockHandles{
+		Syscalls: syscallwrappers.NewSyscalls(),
+	}
+}
+
+// Open opens a socket and returns the handler
+func (sh *SockHandles) Open(socketType, proto int) (SockHandle, error) {
+
+	fd, err := sh.Syscalls.Socket(syscall.AF_NETLINK, socketType, proto)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +29,7 @@ func (h *Handles) open() (SockHandle, error) {
 	sh.rcvbufSize = common.NfnlBuffSize
 	sh.lsa.Family = syscall.AF_NETLINK
 
-	err = h.Syscalls.Bind(fd, &sh.lsa)
+	err = sh.Syscalls.Bind(fd, &sh.lsa)
 	if err != nil {
 		return nil, err
 	}
@@ -27,15 +37,18 @@ func (h *Handles) open() (SockHandle, error) {
 	return sh, nil
 }
 
-func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {
-	err := sh.send(msg)
+// Query sends and waits for netlink response
+func (sh *SockHandles) Query(msg *syscall.NetlinkMessage) error {
+	err := sh.Send(msg)
 	if err != nil {
 		return err
 	}
-	return sh.recv()
+
+	return sh.Recv()
 }
 
-func (sh *SockHandles) recv() error {
+// Recv receives the response from netlink
+func (sh *SockHandles) Recv() error {
 	buf := sh.buf
 	n, _, err := sh.Syscalls.Recvfrom(sh.fd, buf, 0)
 	if err != nil {
@@ -61,7 +74,8 @@ func (sh *SockHandles) recv() error {
 	return nil
 }
 
-func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
+// Send sends message to kernel
+func (sh *SockHandles) Send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	sh.buf = buf
 	common.NativeEndian().PutUint32(buf[0:4], msg.Header.Len)
@@ -73,18 +87,22 @@ func (sh *SockHandles) send(msg *syscall.NetlinkMessage) error {
 	return sh.Syscalls.Sendto(sh.fd, buf, 0, &sh.lsa)
 }
 
-func (sh *SockHandles) getFd() int {
+// GetFd gets the fd
+func (sh *SockHandles) GetFd() int {
 	return sh.fd
 }
 
-func (sh *SockHandles) getRcvBufSize() uint32 {
+// GetRcvBufSize gets the rcvbufsize
+func (sh *SockHandles) GetRcvBufSize() uint32 {
 	return sh.rcvbufSize
 }
 
-func (sh *SockHandles) getLocalAddress() syscall.SockaddrNetlink {
+// GetLocalAddress gets the local address
+func (sh *SockHandles) GetLocalAddress() syscall.SockaddrNetlink {
 	return sh.lsa
 }
 
-func (sh *SockHandles) close() {
+// Close closes the socket
+func (sh *SockHandles) Close() {
 	sh.Syscalls.Close(sh.fd)
 }

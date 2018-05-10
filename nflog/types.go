@@ -4,8 +4,8 @@ package nflog
 
 import (
 	"net"
-	"syscall"
 
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 	"github.com/google/gopacket/layers"
 )
@@ -18,7 +18,7 @@ type NfLog struct {
 	CopyRange     uint16
 	callback      func(buf *NfPacket, data interface{})
 	errorCallback func(err error)
-	Socket        SockHandle
+	Socket        sockets.SockHandle
 	NflogHandle   NFLog
 	Syscalls      syscallwrappers.Syscalls
 }
@@ -45,18 +45,6 @@ type NflMsgConfigCommand struct {
 type NflMsgConfigMode struct {
 	copyRange uint32
 	copyMode  uint8
-}
-
-//SockHandles -- Sock handle of netlink socket
-//fd -- fd of socket
-//rcvbufSize -- rcv buffer Size
-//lsa -- local address
-type SockHandles struct {
-	Syscalls   syscallwrappers.Syscalls
-	fd         int
-	rcvbufSize uint32
-	buf        []byte
-	lsa        syscall.SockaddrNetlink
 }
 
 // NfPacket -- NfPacket struct for parsing logs

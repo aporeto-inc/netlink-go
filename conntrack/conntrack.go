@@ -8,13 +8,13 @@ import (
 	"syscall"
 
 	"github.com/aporeto-inc/netlink-go/common"
-	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common/sockets"
 	"github.com/vishvananda/netlink"
 )
 
 // NewHandle which returns interface which implements Conntrack table get/set/flush
 func NewHandle() Conntrack {
-	return &Handles{Syscalls: syscallwrappers.NewSyscalls()}
+	return &Handles{socketHandlers: sockets.NewSocketHandlers()}
 }
 
 // ConntrackTableList retrieves entries from Conntract table and parse it in the conntrack flow struct
@@ -254,7 +254,7 @@ func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 }
 
 func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
-	sh, err := h.open()
+	_, err := h.socketHandlers.Open(syscall.SOCK_RAW, syscall.NETLINK_NETFILTER)
 	if err != nil {
 		return err
 	}
@@ -264,11 +264,11 @@ func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 		Data:   data,
 	}
 
-	err = sh.query(netlinkMsg)
+	err = h.socketHandlers.Query(netlinkMsg)
 	if err != nil {
 		return err
 	}
 
-	sh.close()
+	h.socketHandlers.Close()
 	return nil
 }
