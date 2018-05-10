@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// String...
 func (r Route) String() string {
 	elems := []string{}
 	if len(r.MultiPath) == 0 {
@@ -32,6 +33,7 @@ func (r Route) String() string {
 	return fmt.Sprintf("{%s}", strings.Join(elems, " "))
 }
 
+// Equal...
 func (r Route) Equal(x Route) bool {
 	return r.LinkIndex == x.LinkIndex &&
 		r.ILinkIndex == x.ILinkIndex &&
@@ -51,14 +53,17 @@ func (r Route) Equal(x Route) bool {
 		(r.Encap == x.Encap || (r.Encap != nil && r.Encap.Equal(x.Encap)))
 }
 
+// SetFlag...
 func (r *Route) SetFlag(flag NextHopFlag) {
 	r.Flags |= int(flag)
 }
 
+// ClearFlag...
 func (r *Route) ClearFlag(flag NextHopFlag) {
 	r.Flags &^= int(flag)
 }
 
+// String...
 func (n *NexthopInfo) String() string {
 	elems := []string{}
 	elems = append(elems, fmt.Sprintf("Ifindex: %d", n.LinkIndex))
@@ -73,6 +78,7 @@ func (n *NexthopInfo) String() string {
 	return fmt.Sprintf("{%s}", strings.Join(elems, " "))
 }
 
+// Equal...
 func (n NexthopInfo) Equal(x NexthopInfo) bool {
 	return n.LinkIndex == x.LinkIndex &&
 		n.Hops == x.Hops &&
@@ -82,6 +88,7 @@ func (n NexthopInfo) Equal(x NexthopInfo) bool {
 		(n.Encap == x.Encap || (n.Encap != nil && n.Encap.Equal(x.Encap)))
 }
 
+// Equal...
 func (n nexthopInfoSlice) Equal(x []*NexthopInfo) bool {
 	if len(n) != len(x) {
 		return false

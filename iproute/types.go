@@ -33,8 +33,10 @@ type Rule struct {
 // Scope is an enum representing a route scope.
 type Scope uint8
 
+// NextHopFlag...
 type NextHopFlag int
 
+// Destination...
 type Destination interface {
 	Family() int
 	Decode([]byte) error
@@ -43,6 +45,7 @@ type Destination interface {
 	Equal(Destination) bool
 }
 
+// Encap...
 type Encap interface {
 	Type() int
 	Decode([]byte) error
@@ -73,17 +76,13 @@ type Route struct {
 	AdvMSS     int
 }
 
-type flagString struct {
-	f NextHopFlag
-	s string
-}
-
 // RouteUpdate is sent when a route changes - type is RTM_NEWROUTE or RTM_DELROUTE
 type RouteUpdate struct {
 	Type uint16
 	Route
 }
 
+// NexthopInfo...
 type NexthopInfo struct {
 	LinkIndex int
 	Hops      int
