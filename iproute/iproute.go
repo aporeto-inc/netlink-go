@@ -8,13 +8,7 @@ import (
 
 	"github.com/aporeto-inc/netlink-go/common"
 	"github.com/aporeto-inc/netlink-go/common/sockets"
-	"github.com/vishvananda/netlink"
 )
-
-// Iproute is the wrapper around netlinkHandle
-type Iproute struct {
-	socketHandlers sockets.SockHandle
-}
 
 // NewIPRouteHandle returns a reference IpRoute structure
 func NewIPRouteHandle() (IPRoute, error) {
@@ -23,7 +17,7 @@ func NewIPRouteHandle() (IPRoute, error) {
 }
 
 // AddRule add rule to the rule table
-func (i *Iproute) AddRule(rule *netlink.Rule) error {
+func (i *Iproute) AddRule(rule *Rule) error {
 	//mask of the high bits
 	seq := time.Now().Unix() & 0x00000000ffffffff
 	nlmsghdr := common.BuildNlMsgHeader(
@@ -41,11 +35,12 @@ func (i *Iproute) AddRule(rule *netlink.Rule) error {
 	buf = append(buf, markbuf...)
 	buf = append(buf, maskbuf...)
 	buf = append(buf, priobuf...)
+
 	return i.send(nlmsghdr, buf)
 }
 
 // DeleteRule  deletes a rule from the rule table
-func (i *Iproute) DeleteRule(rule *netlink.Rule) error {
+func (i *Iproute) DeleteRule(rule *Rule) error {
 	//mask of the high bits
 	seq := time.Now().Unix() & 0x00000000ffffffff
 	nlmsghdr := common.BuildNlMsgHeader(
@@ -61,11 +56,12 @@ func (i *Iproute) DeleteRule(rule *netlink.Rule) error {
 	buf = append(buf, rtmsgbuf...)
 	buf = append(buf, priobuf...)
 	buf = append(buf, markbuf...)
+
 	return i.send(nlmsghdr, buf)
 }
 
 // AddRoute add a route a specific table
-func (i *Iproute) AddRoute(route *netlink.Route) error {
+func (i *Iproute) AddRoute(route *Route) error {
 	seq := time.Now().Unix() & 0x00000000ffffffff
 	nlmsghdr := common.BuildNlMsgHeader(
 		syscall.RTM_NEWROUTE,
@@ -84,7 +80,7 @@ func (i *Iproute) AddRoute(route *netlink.Route) error {
 }
 
 // DeleteRoute deletes the route from a specific table.
-func (i *Iproute) DeleteRoute(route *netlink.Route) error {
+func (i *Iproute) DeleteRoute(route *Route) error {
 	seq := time.Now().Unix() & 0x00000000ffffffff
 	nlmsghdr := common.BuildNlMsgHeader(
 		syscall.RTM_DELROUTE,
