@@ -63,7 +63,7 @@ func TestMark(t *testing.T) {
 
 				Convey("Given I try to update mark for given attributes", func() {
 					for i := 0; i < 5; i++ {
-						_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
+						err := handle.ConntrackTableUpdateMark("127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 						So(err, ShouldBeNil)
 					}
 
