@@ -18,7 +18,7 @@ before_install:
   - gometalinter.v1 --install
 
 install:
-  - go get -t -v -race ./...
+  - go get -t -v ./...
   - sudo apt-get install conntrack
 
 script:
