@@ -69,7 +69,7 @@ func TestMark(t *testing.T) {
 
 					Convey("Then I should see 5 mark entries to be updated", func() {
 						resultFin, err := handle.ConntrackTableList(common.ConntrackTable)
-						fmt.Println(resultFIn)
+						fmt.Println(resultFin)
 						for i := range resultFin {
 							if resultFin[i].Mark == 23 {
 								mark++
