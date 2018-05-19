@@ -23,8 +23,8 @@ func (r *NfValue16) Set16Value(v uint16) {
 }
 
 // SetNetlinkData -- Sets netlink data
-func SetNetlinkData(b uint32) *NfAttrResponsePayload {
-	return &NfAttrResponsePayload{
+func SetNetlinkData(b uint32) NfAttrResponsePayload {
+	return NfAttrResponsePayload{
 		data: make([]byte, b),
 	}
 }
