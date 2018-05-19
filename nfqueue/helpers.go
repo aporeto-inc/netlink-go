@@ -11,16 +11,16 @@ import (
 //GetPacketInfo -- Extract packet info from netlink response
 //Returns mark,packetid and packet payload
 //Mark is uint32
-func GetPacketInfo(attr []*common.NfAttrResponsePayload) (int, int, []byte) {
+func GetPacketInfo(attr []common.NfAttrResponsePayload) (int, int, []byte) {
 	var packetID, mark int
 
-	if attr[NfqaPacketHdr] != nil {
+	if attr[NfqaPacketHdr].GetNetlinkData() != nil {
 		packetID = int(native.Uint32(common.GetNetlinkDataArray(int(NfqaPacketHdr), attr)))
 	}
-	if attr[NfqaMark] != nil {
+	if attr[NfqaMark].GetNetlinkData() != nil {
 		mark = int(binary.BigEndian.Uint32(common.GetNetlinkDataArray(int(NfqaMark), attr)))
 	}
-	if attr[NfqaPayload] != nil {
+	if attr[NfqaPayload].GetNetlinkData() != nil {
 		return packetID, mark, common.GetNetlinkDataArray(int(NfqaPayload), attr)
 	}
 

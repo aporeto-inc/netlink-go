@@ -57,7 +57,7 @@ type NfQueue struct {
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      []*common.NfAttrResponsePayload
+	nfattrresponse      []common.NfAttrResponsePayload
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -71,7 +71,7 @@ func NewNFQueue() NFQueue {
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
 		buf:                 make([]byte, common.NfnlBuffSize),
-		nfattrresponse:      make([]*common.NfAttrResponsePayload, nfqaMax),
+		nfattrresponse:      make([]common.NfAttrResponsePayload, nfqaMax),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
 
@@ -429,7 +429,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error) {
+func (q *NfQueue) Recv() (*common.NfqGenMsg, []common.NfAttrResponsePayload, error) {
 	buf := q.buf
 	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
 	if err != nil {
