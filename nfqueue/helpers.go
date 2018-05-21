@@ -71,7 +71,7 @@ func (r *NfqMsgConfigCommand) ToWireFormat() []byte {
 	buf := make([]byte, SizeofMsgConfigCommand)
 	buf[0] = byte(r.Command)
 	buf[1] = r._pad
-	binary.LittleEndian.PutUint16(buf[2:], r.pf)
+	binary.BigEndian.PutUint16(buf[2:], r.pf)
 	return buf
 }
 
