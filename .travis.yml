@@ -6,6 +6,15 @@ go:
  - 1.9.2
 
 addons:
+   apt:
+     packages:
+       - libnetfilter-queue-dev
+       - libnetfilter-log-dev
+       - libnetfilter-conntrack-dev
+       - libnetfilter-conntrack3
+       - libnetfilter-conntrack3-dbg
+       - iptables
+       - ipset
 
 env:
   global:
@@ -14,14 +23,12 @@ env:
     - SUDO_PERMITTED=1
 
 before_install:
-  - sudo su
   - sudo apt-get update
   - go get -u gopkg.in/alecthomas/gometalinter.v1
   - gometalinter.v1 --install
 
 install:
   - go get -t -v ./...
-  - sudo apt-get install conntrack
 
 script:
   - gometalinter.v1 --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=aligncheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
