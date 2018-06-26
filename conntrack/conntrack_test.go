@@ -86,6 +86,16 @@ func TestMark(t *testing.T) {
 				Convey("Then I should see 5 mark entries to be updated", func() {
 					resultFin, _ := handle.ConntrackTableList(common.ConntrackTable)
 
+					cmd := exec.Command("/bin/sh", "-c", "conntrack -L")
+					var outb, errb bytes.Buffer
+					cmd.Stdout = &outb
+					cmd.Stderr = &errb
+					err = cmd.Run()
+					if err != nil {
+						log.Fatal(err)
+					}
+					fmt.Println("out:", outb.String(), "err:", errb.String())
+
 					for i := range resultFin {
 						if resultFin[i].Mark == 23 {
 							mark++
@@ -94,16 +104,6 @@ func TestMark(t *testing.T) {
 					So(mark, ShouldEqual, 5)
 				})
 			})
-
-			cmd := exec.Command("/bin/sh", "-c", "conntrack -L")
-			var outb, errb bytes.Buffer
-			cmd.Stdout = &outb
-			cmd.Stderr = &errb
-			err = cmd.Run()
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println("out:", outb.String(), "err:", errb.String())
 
 			Convey("Given I try to flush the entries from conntrack", func() {
 				err := handle.ConntrackTableFlush(common.ConntrackTable)
