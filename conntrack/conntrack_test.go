@@ -19,7 +19,7 @@ func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) 
 			return err
 		}
 
-		LocalAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
+		LocalAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
 		if err != nil {
 			return err
 		}
