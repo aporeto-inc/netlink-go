@@ -62,7 +62,6 @@ func TestMark(t *testing.T) {
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
-			fmt.Println("Flows:", len(result))
 			Convey("Then I should not get any error", func() {
 				So(len(result), ShouldBeGreaterThanOrEqualTo, 5)
 				So(err, ShouldBeNil)
@@ -95,6 +94,16 @@ func TestMark(t *testing.T) {
 					So(mark, ShouldEqual, 5)
 				})
 			})
+
+			cmd := exec.Command("/bin/sh", "-c", "conntrack -L")
+			var outb, errb bytes.Buffer
+			cmd.Stdout = &outb
+			cmd.Stderr = &errb
+			err = cmd.Run()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("out:", outb.String(), "err:", errb.String())
 
 			Convey("Given I try to flush the entries from conntrack", func() {
 				err := handle.ConntrackTableFlush(common.ConntrackTable)
