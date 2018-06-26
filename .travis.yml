@@ -14,8 +14,8 @@ env:
     - SUDO_PERMITTED=1
 
 before_install:
-  - go get -u gopkg.in/alecthomas/gometalinter.v2
-  - gometalinter.v2 --install
+  - go get -u gopkg.in/alecthomas/gometalinter.v1
+  - gometalinter.v1 --install
   - go get -u github.com/golang/dep/cmd/dep
 
 install:
@@ -23,5 +23,5 @@ install:
   - sudo apt-get install conntrack
 
 script:
-  - gometalinter.v2 --vendor --skip=mockdocker --disable-all --enable=vet --enable=vetshadow --enable=errcheck --enable=golint --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=interfacer --enable=goconst --enable=misspell --deadline=10m ./...
+  - gometalinter.v1 --vendor --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=aligncheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
   - sudo -E env "PATH=$PATH" go test ./...
