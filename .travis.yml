@@ -16,11 +16,12 @@ env:
 before_install:
   - go get -u gopkg.in/alecthomas/gometalinter.v1
   - gometalinter.v1 --install
+  - go get -u github.com/golang/dep/cmd/dep
 
 install:
-  - go get -t -v ./...
+  - dep ensure -v
   - sudo apt-get install conntrack
 
 script:
   - gometalinter.v1 --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=aligncheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
-  - sudo -E env "PATH=$PATH" go test ./... -v
+  - sudo -E env "PATH=$PATH" go test ./...
