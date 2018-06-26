@@ -1,8 +1,11 @@
 package conntrack
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"net"
+	"os/exec"
 	"testing"
 
 	"github.com/aporeto-inc/netlink-go/common"
@@ -53,6 +56,16 @@ func TestMark(t *testing.T) {
 					_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 					So(err, ShouldBeNil)
 				}
+
+				cmd := exec.Command("/bin/sh", "-c", "conntrack -V")
+				var outb, errb bytes.Buffer
+				cmd.Stdout = &outb
+				cmd.Stderr = &errb
+				err := cmd.Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Println("out:", outb.String(), "err:", errb.String())
 
 				Convey("Then I should see 5 mark entries to be updated", func() {
 					resultFin, _ := handle.ConntrackTableList(common.ConntrackTable)
