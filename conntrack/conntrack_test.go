@@ -5,7 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/aporeto-inc/netlink-go/common"
+	"go.aporeto.io/netlink-go/common"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 	"github.com/google/gopacket/layers"
 )
 
