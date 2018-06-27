@@ -5,7 +5,7 @@ dist: trusty
 go_import_path: github.com/aporeto-inc/netlink-go
 
 go:
- - 1.8.1
+ - 1.9.2
 
 addons:
 
@@ -19,7 +19,6 @@ before_install:
   - go get -u gopkg.in/alecthomas/gometalinter.v2
   - gometalinter.v2 --install
   - go get -u github.com/golang/dep/cmd/dep
-  - cd ${GOPATH}/src/github.com/aporeto-inc/netlink-go
   - mkdir -p ${GOPATH}/src/github.com/aporeto-inc && ln -s ${TRAVIS_BUILD_DIR} ${GOPATH}/src/github.com/aporeto-inc/netlink-go
 
 install:
