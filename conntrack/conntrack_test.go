@@ -5,34 +5,21 @@ import (
 	"net"
 	"testing"
 
-	"go.aporeto.io/netlink-go/common"
-
+	"github.com/aporeto-inc/netlink-go/common"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) error {
+func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) {
 	for i := 0; i < flows; i++ {
-		ServerAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dstIP, dstPort))
-		if err != nil {
-			return err
-		}
+		ServerAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dstIP, dstPort))
 
-		LocalAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
-		if err != nil {
-			return err
-		}
+		LocalAddr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
 
-		Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
-		if err != nil {
-			return err
-		}
+		Conn, _ := net.DialUDP("udp", LocalAddr, ServerAddr)
 
 		Conn.Write([]byte("Hello World"))
-		if err := Conn.Close(); err != nil {
-			return err
-		}
+		Conn.Close()
 	}
-	return nil
 }
 
 func TestMark(t *testing.T) {
@@ -50,16 +37,12 @@ func TestMark(t *testing.T) {
 			})
 		})
 
-		Convey("Given I try to create 5 flows", func() {
-			//udpFlows -- 5
-			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
-			Convey("Then I should not get any error", func() {
-				So(err, ShouldBeNil)
-			})
-		})
+		//udpFlows -- 5
+		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
+
 			Convey("Then I should not get any error", func() {
 				So(len(result), ShouldBeGreaterThanOrEqualTo, 5)
 				So(err, ShouldBeNil)
@@ -69,33 +52,25 @@ func TestMark(t *testing.T) {
 				for i := 0; i < 5; i++ {
 					_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 					So(err, ShouldBeNil)
-				})
+				}
 
-				Convey("Given I try to update mark for given attributes", func() {
-					for i := 0; i < 5; i++ {
-						_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
-						So(err, ShouldBeNil)
-					}
+				Convey("Then I should see 5 mark entries to be updated", func() {
+					resultFin, _ := handle.ConntrackTableList(common.ConntrackTable)
 
-					Convey("Then I should see 5 mark entries to be updated", func() {
-						resultFin, err := handle.ConntrackTableList(common.ConntrackTable)
-
-						for i := range resultFin {
-							if resultFin[i].Mark == 23 {
-								mark++
-							}
+					for i := range resultFin {
+						if resultFin[i].Mark == 23 {
+							mark++
 						}
-						So(mark, ShouldEqual, 5)
-						So(err, ShouldBeNil)
-					})
+					}
+					So(mark, ShouldEqual, 5)
 				})
+			})
 
-				Convey("Given I try to flush the entries from conntrack", func() {
-					err := handle.ConntrackTableFlush(common.ConntrackTable)
+			Convey("Given I try to flush the entries from conntrack", func() {
+				err := handle.ConntrackTableFlush(common.ConntrackTable)
 
-					Convey(" Then I should not get any error", func() {
-						So(err, ShouldBeNil)
-					})
+				Convey(" Then I should not get any error", func() {
+					So(err, ShouldBeNil)
 				})
 			})
 		})
@@ -108,13 +83,8 @@ func TestFlush(t *testing.T) {
 	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
 		handle := NewHandle()
 
-		Convey("Given I try to create 5 flows", func() {
-			//udpFlows -- 5
-			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
-			Convey("Then I should not get any error", func() {
-				So(err, ShouldBeNil)
-			})
-		})
+		//udpFlows -- 5
+		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
