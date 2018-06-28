@@ -1,10 +1,6 @@
 # Gopkg.toml example
 #
-<<<<<<< HEAD
 # Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
-=======
-# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
->>>>>>> 72397c426f35064786a116bd7cd01496a8e99c16
 # for detailed Gopkg.toml documentation.
 #
 # required = ["github.com/user/thing/cmd/thing"]
@@ -28,28 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
-<<<<<<< HEAD
-
-[[constraint]]
-  name = "github.com/aporeto-inc/trireme-lib"
-  version = "8.46.1"
-
-[[constraint]]
-  name = "github.com/golang/mock"
-  version = "1.1.1"
-
-[[constraint]]
-  name = "github.com/smartystreets/goconvey"
-  version = "1.6.3"
-
-[[constraint]]
-  name = "github.com/vishvananda/netlink"
-  version = "1.0.0"
-=======
 [[constraint]]
   name = "github.com/vishvananda/netlink"
   revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
->>>>>>> 72397c426f35064786a116bd7cd01496a8e99c16
 
 [prune]
   go-tests = true
