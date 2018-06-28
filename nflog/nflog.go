@@ -9,9 +9,9 @@ import (
 	"io"
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/common"
-	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
-	"github.com/aporeto-inc/trireme-lib/controller/pkg/packet"
+	"github.com/aporeto-inc/trireme/enforcer/utils/packet"
+	"go.aporeto.io/netlink-go/common"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
 // NewNFLog -- Create a new Nflog handle

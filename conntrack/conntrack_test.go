@@ -5,7 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/aporeto-inc/netlink-go/common"
+	"go.aporeto.io/netlink-go/common"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -27,9 +28,10 @@ func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) 
 		}
 
 		Conn.Write([]byte("Hello World"))
-		Conn.Close()
+		if err := Conn.Close(); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
@@ -48,16 +50,24 @@ func TestMark(t *testing.T) {
 			})
 		})
 
-		Convey("Given I try to create flows", func() {
+		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
 			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
-			So(err, ShouldBeNil)
+			Convey("Then I should not get any error", func() {
+				So(err, ShouldBeNil)
+			})
+		})
 
-			Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
-				result, err := handle.ConntrackTableList(common.ConntrackTable)
+		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
+			result, err := handle.ConntrackTableList(common.ConntrackTable)
+			Convey("Then I should not get any error", func() {
+				So(len(result), ShouldBeGreaterThanOrEqualTo, 5)
+				So(err, ShouldBeNil)
+			})
 
-				Convey("Then I should not get any error", func() {
-					So(len(result), ShouldBeGreaterThanOrEqualTo, 5)
+			Convey("Given I try to update mark for given attributes", func() {
+				for i := 0; i < 5; i++ {
+					_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 					So(err, ShouldBeNil)
 				})
 
@@ -98,8 +108,13 @@ func TestFlush(t *testing.T) {
 	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
 		handle := NewHandle()
 
-		//udpFlows -- 5
-		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+		Convey("Given I try to create 5 flows", func() {
+			//udpFlows -- 5
+			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+			Convey("Then I should not get any error", func() {
+				So(err, ShouldBeNil)
+			})
+		})
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
