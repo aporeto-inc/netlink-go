@@ -9,8 +9,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/aporeto-inc/netlink-go/common"
-	"github.com/aporeto-inc/netlink-go/conntrack"
+	"go.aporeto.io/netlink-go/common"
+	"go.aporeto.io/netlink-go/conntrack"
 	"github.com/vishvananda/netlink"
 )
 

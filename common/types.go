@@ -5,7 +5,7 @@ package common
 import (
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
 //Types for various enums needed by the nfqueue subsys in linux
