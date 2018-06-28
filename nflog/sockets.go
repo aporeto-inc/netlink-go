@@ -17,7 +17,7 @@ func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {
 	return sh.recv()
 }
 
-func (sh *SockHandles) recv() error {
+func (sh *SockHandles) recv() (err error) {
 	buf := sh.buf
 	n, _, err := sh.Syscalls.Recvfrom(sh.fd, buf, 0)
 

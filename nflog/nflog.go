@@ -9,10 +9,10 @@ import (
 	"io"
 	"syscall"
 
-	"go.aporeto.io/netlink-go/common"
-	"go.aporeto.io/netlink-go/common/syscallwrappers"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"go.aporeto.io/netlink-go/common"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
 // NewNFLog -- Create a new Nflog handle

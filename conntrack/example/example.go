@@ -9,9 +9,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/vishvananda/netlink"
 	"go.aporeto.io/netlink-go/common"
 	"go.aporeto.io/netlink-go/conntrack"
-	"github.com/vishvananda/netlink"
 )
 
 func display(result []*netlink.ConntrackFlow) {

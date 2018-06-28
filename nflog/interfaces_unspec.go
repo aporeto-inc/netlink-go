@@ -17,6 +17,7 @@ type NFLog interface {
 	parsePacket(buffer []byte) error
 }
 
+// NewNFLog -- Create a new Nflog handle
 func NewNFLog() NFLog {
 	return nil
 }
