@@ -6,16 +6,7 @@ go:
  - 1.9.2
 
 addons:
-   apt:
-     packages:
-       - libnetfilter-queue-dev
-       - libnetfilter-log-dev
-       - libnetfilter-conntrack-dev
-       - libnetfilter-conntrack3
-       - libnetfilter-conntrack3-dbg
-       - iptables
-       - ipset
-
+  
 env:
   global:
     - TOOLS_CMD=golang.org/x/tools/cmd
