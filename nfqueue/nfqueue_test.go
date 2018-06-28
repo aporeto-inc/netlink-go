@@ -7,10 +7,10 @@ import (
 	"syscall"
 	"testing"
 
-	"go.aporeto.io/netlink-go/common"
-	"go.aporeto.io/netlink-go/common/syscallwrappers"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.aporeto.io/netlink-go/common"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
 var isCalled int
