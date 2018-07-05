@@ -6,7 +6,6 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/google/gopacket/layers"
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
@@ -78,14 +77,14 @@ type IPLayer struct {
 	SrcIP    net.IP
 	DstIP    net.IP
 	Version  uint8
-	Protocol layers.IPProtocol
+	Protocol uint8
 	Length   uint16
 }
 
 // Ports -- Generic struct for TCP and UDP ports
 type Ports struct {
-	SrcPort int
-	DstPort int
+	SrcPort uint16
+	DstPort uint16
 }
 
 // PacketPayload -- PacketPayload struct
