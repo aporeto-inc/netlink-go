@@ -50,9 +50,9 @@ func TestMark(t *testing.T) {
 
 			Convey("Given I try to update mark for given attributes", func() {
 				for i := 0; i < 5; i++ {
-					i, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
+					k, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 					So(err, ShouldBeNil)
-					So(i, ShouldEqual, 1)
+					So(k, ShouldEqual, 1)
 				}
 
 				Convey("Then I should see 5 mark entries to be updated", func() {
