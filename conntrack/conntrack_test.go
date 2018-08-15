@@ -87,7 +87,7 @@ func TestFlush(t *testing.T) {
 		handle := NewHandle()
 
 		//udpFlows -- 5
-		udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+		udpFlowCreate(t, 5, 2000, "127.0.0.1", 3000)
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
