@@ -103,7 +103,6 @@ func TestFlush(t *testing.T) {
 	Convey("Given I try to create a new handle and 5 udp flows", t, func() {
 		handle := NewHandle()
 
-
 		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
 			err := udpFlowCreate(t, 5, 2000, "127.0.0.1", 3000)
@@ -111,7 +110,6 @@ func TestFlush(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 		})
->>>>>>> 74dcd2d383941209e6b2fcf864210f2a470dca18
 
 		Convey("Given I try to retrieve Conntrack table entries through netlink socket", func() {
 			result, err := handle.ConntrackTableList(common.ConntrackTable)
