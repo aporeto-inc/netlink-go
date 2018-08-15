@@ -110,7 +110,7 @@ func (r *NfqMsgConfigQueueLen) Length() uint32 {
 // 	return element.attr.nfaLen, element.attr.nfaType, element.data
 // }
 
-//QueueID -- return queueid
+//QueueID  return queueid
 func QueueID(msg *common.NfqGenMsg) uint16 {
 	return msg.GetNfgenResID()
 }
