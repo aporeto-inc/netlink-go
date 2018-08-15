@@ -2,6 +2,7 @@
 
 package conntrack
 
+// Conntrack interface has Conntrack manipulations (get/set/flush)
 type Conntrack interface {
 	ConntrackTableList(table interface{}) ([]*interface{}, error)
 	ConntrackTableFlush(table interface{}) error

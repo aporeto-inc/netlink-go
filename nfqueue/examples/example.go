@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aporeto-inc/netlink-go/nfqueue"
+	"go.aporeto.io/netlink-go/nfqueue"
 )
 
 func passNetVerdict(buf *nfqueue.NFPacket, data interface{}) {

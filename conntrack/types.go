@@ -5,7 +5,7 @@ package conntrack
 import (
 	"syscall"
 
-	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
+	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
 //SockHandles -- Sock handle of netlink socket
