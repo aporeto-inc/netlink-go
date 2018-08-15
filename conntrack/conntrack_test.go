@@ -55,7 +55,8 @@ func TestMark(t *testing.T) {
 				}
 
 				Convey("Then I should see 5 mark entries to be updated", func() {
-					resultFin, _ := handle.ConntrackTableList(common.ConntrackTable)
+					resultFin, err := handle.ConntrackTableList(common.ConntrackTable)
+					So(err, ShouldBeNil)
 
 					for i := range resultFin {
 						if resultFin[i].Mark == 23 {
