@@ -59,6 +59,7 @@ func TestMark(t *testing.T) {
 					So(err, ShouldBeNil)
 
 					for i := range resultFin {
+						fmt.Println(resultFin[i])
 						if resultFin[i].Mark == 23 {
 							mark++
 						}
