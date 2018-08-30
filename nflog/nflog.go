@@ -295,7 +295,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 		case NFULA_PAYLOAD:
 			payload := make([]byte, NfaAlign16(payloadLen))
 			reader.Read(payload)
-			ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "")
+			ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "", false)
 			if err != nil {
 				return err
 			}
