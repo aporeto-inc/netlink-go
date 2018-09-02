@@ -67,12 +67,14 @@ func TestMark(t *testing.T) {
 
 			Convey("Given I try to update mark for given attributes", func() {
 				for i := 0; i < 5; i++ {
-					_, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
+					k, err := handle.ConntrackTableUpdateMarkForAvailableFlow(result, "127.0.0.1", "127.0.0.10", 17, 2000+uint16(i), 3000, 23)
 					So(err, ShouldBeNil)
+					So(k, ShouldEqual, 1)
 				}
 
 				Convey("Then I should see 5 mark entries to be updated", func() {
-					resultFin, _ := handle.ConntrackTableList(common.ConntrackTable)
+					resultFin, err := handle.ConntrackTableList(common.ConntrackTable)
+					So(err, ShouldBeNil)
 
 					for i := range resultFin {
 						if resultFin[i].Mark == 23 {
@@ -102,7 +104,7 @@ func TestFlush(t *testing.T) {
 
 		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
-			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+			err := udpFlowCreate(t, 5, 2000, "127.0.0.1", 3000)
 			Convey("Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
