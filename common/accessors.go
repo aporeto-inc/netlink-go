@@ -64,10 +64,10 @@ func (d *NfAttrResponsePayload) GetNetlinkData() []byte {
 	return d.data
 }
 
-// GetNetlinkDataArray -- Get netlink data from array
-func GetNetlinkDataArray(index int, d []*NfAttrResponsePayload) []byte {
-	return d[index].data
-}
+// // GetNetlinkDataArray -- Get netlink data from array
+// func GetNetlinkDataArray(index int, d *NfAttrResponsePayload) []byte {
+// 	return d[index].data
+// }
 
 // GetNfgenFamily -- Get  Nfgen family
 func (nfg *NfqGenMsg) GetNfgenFamily() uint8 {

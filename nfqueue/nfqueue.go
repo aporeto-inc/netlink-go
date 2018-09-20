@@ -57,7 +57,7 @@ type NfQueue struct {
 	queueHandle         SockHandle
 	NotificationChannel chan *NFPacket
 	buf                 []byte
-	nfattrresponse      []*common.NfAttrResponsePayload
+	nfattrresponse      map[int]*common.NfAttrResponsePayload
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
 }
@@ -71,13 +71,16 @@ func NewNFQueue() NFQueue {
 		Syscalls:            syscallwrappers.NewSyscalls(),
 		NotificationChannel: make(chan *NFPacket, 100),
 		buf:                 make([]byte, common.NfnlBuffSize),
-		nfattrresponse:      make([]*common.NfAttrResponsePayload, nfqaMax),
+		nfattrresponse:      make(map[int]*common.NfAttrResponsePayload, 3),
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
 
-	for i := 0; i < int(nfqaMax); i++ {
-		n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
-	}
+	n.nfattrresponse[int(NfqaPacketHdr)] = common.SetNetlinkData(common.NfnlBuffSize)
+	n.nfattrresponse[int(NfqaMark)] = common.SetNetlinkData(common.NfnlBuffSize)
+	n.nfattrresponse[int(NfqaPayload)] = common.SetNetlinkData(common.NfnlBuffSize)
+	// for i := 0; i < int(nfqaMax); i++ {
+	// 	n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
+	// }
 
 	return n
 }
@@ -429,7 +432,7 @@ func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, pack
 }
 
 //Recv -- Recv packets from socket and parse them return nfgen and nfattr slices
-func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, error) {
+func (q *NfQueue) Recv() (*common.NfqGenMsg, map[int]*common.NfAttrResponsePayload, error) {
 	var err error
 	buf := q.buf
 	n, _, err := q.Syscalls.Recvfrom(q.queueHandle.getFd(), buf, syscall.MSG_WAITALL)
@@ -454,6 +457,7 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, []*common.NfAttrResponsePayload, er
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
 
+	fmt.Printf("%+v", q.nfattrresponse)
 	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
 
 	return nfgenmsg, nfattrmsg, err
