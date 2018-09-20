@@ -274,10 +274,13 @@ func NetlinkMessageToNfAttrStruct(buf []byte, hdr map[int]*NfAttrResponsePayload
 
 		if i+int(nfaLen32)-4 <= len(buf) {
 			if nfaType < uint16(nfqaMax) {
-				fmt.Println(int(nfaType))
 				if _, ok := hdr[int(nfaType)]; !ok {
+					i = i + int(nfaLen32) - 4
+					i = int(NfaAlign32(uint32(i)))
+					fmt.Println("SKIPPING")
 					continue
 				}
+				fmt.Println("STORING")
 				hdr[int(nfaType)].data = buf[i : i+int(nfaLen32)-4]
 			}
 		} else {

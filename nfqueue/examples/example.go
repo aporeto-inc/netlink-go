@@ -15,14 +15,13 @@ import (
 
 func passNetVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
-	fmt.Printf("NET VERDICT %+v", buf)
 	buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 
 }
 
 func passVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
-	fmt.Printf("APP VERDICT %+v", buf)
+	fmt.Println("APP VERDICT ")
 	buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 
 }

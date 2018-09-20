@@ -456,10 +456,9 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, map[int]*common.NfAttrResponsePaylo
 	if err != nil {
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
-
-	fmt.Printf("%+v", q.nfattrresponse)
+	fmt.Println("GOING IN")
 	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
-
+	fmt.Println("RETURNED")
 	return nfgenmsg, nfattrmsg, err
 }
 
