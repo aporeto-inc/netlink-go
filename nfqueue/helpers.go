@@ -2,7 +2,6 @@ package nfqueue
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"unsafe"
 
@@ -22,7 +21,6 @@ func GetPacketInfo(attr map[int]*common.NfAttrResponsePayload) (int, int, []byte
 		mark = int(binary.BigEndian.Uint32(nfqaMark.GetNetlinkData()))
 	}
 	if nfqaPayload, ok := attr[int(NfqaPayload)]; ok {
-		fmt.Println(packetID, mark, nfqaPayload.GetNetlinkData())
 		return packetID, mark, nfqaPayload.GetNetlinkData()
 	}
 

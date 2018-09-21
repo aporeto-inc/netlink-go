@@ -75,12 +75,10 @@ func NewNFQueue() NFQueue {
 		hdrSlice:            make([]byte, int(syscall.SizeofNlMsghdr)+int(common.SizeofNfGenMsg)+int(common.NfaLength(uint16(SizeofNfqMsgVerdictHdr)))+int(common.NfaLength(uint16(SizeofNfqMsgMarkHdr)))),
 	}
 
+	// Allocating only required buffers
 	n.nfattrresponse[int(NfqaPacketHdr)] = common.SetNetlinkData(common.NfnlBuffSize)
 	n.nfattrresponse[int(NfqaMark)] = common.SetNetlinkData(common.NfnlBuffSize)
 	n.nfattrresponse[int(NfqaPayload)] = common.SetNetlinkData(common.NfnlBuffSize)
-	// for i := 0; i < int(nfqaMax); i++ {
-	// 	n.nfattrresponse[i] = common.SetNetlinkData(common.NfnlBuffSize)
-	// }
 
 	return n
 }
@@ -456,9 +454,9 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, map[int]*common.NfAttrResponsePaylo
 	if err != nil {
 		return nil, nil, fmt.Errorf("NfGen struct format invalid : %v", err)
 	}
-	fmt.Println("GOING IN")
+
 	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
-	fmt.Println("RETURNED")
+
 	return nfgenmsg, nfattrmsg, err
 }
 

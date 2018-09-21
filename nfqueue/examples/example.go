@@ -7,7 +7,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.aporeto.io/netlink-go/nfqueue"
@@ -21,7 +20,6 @@ func passNetVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
 func passVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
-	fmt.Println("APP VERDICT ")
 	buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 
 }
