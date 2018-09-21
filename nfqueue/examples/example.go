@@ -39,6 +39,6 @@ func main() {
 	}
 
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Second)
 	}
 }

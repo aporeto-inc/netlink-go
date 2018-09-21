@@ -277,7 +277,7 @@ func NetlinkMessageToNfAttrStruct(buf []byte, hdr map[int]*NfAttrResponsePayload
 				if _, ok := hdr[int(nfaType)]; !ok {
 					i = i + int(nfaLen32) - 4
 					i = int(NfaAlign32(uint32(i)))
-					continue
+					continue // Skip unused types
 				}
 
 				hdr[int(nfaType)].data = buf[i : i+int(nfaLen32)-4]
