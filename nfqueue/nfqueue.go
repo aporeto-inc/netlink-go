@@ -457,7 +457,7 @@ func (q *NfQueue) Recv() (*common.NfqGenMsg, map[int]*common.NfAttrResponsePaylo
 
 	nfattrmsg, _, err := common.NetlinkMessageToNfAttrStruct(payload, q.nfattrresponse)
 
-	return nfgenmsg, nfattrmsg, err
+	return nfgenmsg, nfattrmsgss, err
 }
 
 //ProcessPackets -- Function to wait on socket to receive packets and post it back to channel
