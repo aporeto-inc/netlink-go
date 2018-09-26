@@ -2,10 +2,10 @@ language: go
 sudo: required
 dist: trusty
 
+go_import_path: go.aporeto.io/netlink-go
+
 go:
  - 1.9.2
-
-addons:
 
 env:
   global:

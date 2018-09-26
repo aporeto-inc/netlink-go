@@ -260,7 +260,7 @@ func NetlinkMessageToNfGenStruct(buf []byte) (*NfqGenMsg, []byte, error) {
 }
 
 //NetlinkMessageToNfAttrStruct -- Convert byte slice representing nfattr to nfattr struct slice
-func NetlinkMessageToNfAttrStruct(buf []byte, hdr []*NfAttrResponsePayload) ([]*NfAttrResponsePayload, []byte, error) {
+func NetlinkMessageToNfAttrStruct(buf []byte, hdr map[int]*NfAttrResponsePayload) (map[int]*NfAttrResponsePayload, []byte, error) {
 	//hdr := make([]*NfAttrResponsePayload, nfqaMax)
 	i := 0
 	for i < len(buf) {
@@ -274,7 +274,13 @@ func NetlinkMessageToNfAttrStruct(buf []byte, hdr []*NfAttrResponsePayload) ([]*
 
 		if i+int(nfaLen32)-4 <= len(buf) {
 			if nfaType < uint16(nfqaMax) {
-				hdr[nfaType].data = buf[i : i+int(nfaLen32)-4]
+				if _, ok := hdr[int(nfaType)]; !ok {
+					i = i + int(nfaLen32) - 4
+					i = int(NfaAlign32(uint32(i)))
+					continue // Skip unused types
+				}
+
+				hdr[int(nfaType)].data = buf[i : i+int(nfaLen32)-4]
 			}
 		} else {
 			return hdr, nil, fmt.Errorf("Bad Attr")
