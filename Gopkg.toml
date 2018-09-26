@@ -1,5 +1,3 @@
-ignored = ["go.aporeto.io/netlink-go*"]
-
 [[constraint]]
   name = "github.com/vishvananda/netlink"
   revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
