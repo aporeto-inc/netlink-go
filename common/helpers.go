@@ -74,7 +74,7 @@ func BuildNfgenMsg(family int, version uint8, resID uint16, n *syscall.NlMsghdr)
 	return &NfqGenMsg{
 		nfgenFamily: uint8(family),
 		version:     version,
-		resID:       uint16(resID),
+		resID:       resID,
 	}
 }
 

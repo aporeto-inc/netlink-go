@@ -144,13 +144,13 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 	opt := 1
 	sockrcvbuf := 500 * int(common.NfnlBuffSize)
 	if err = q.Syscalls.SetsockoptInt(fd, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt); err != nil {
-		return err
+		return nil, err
 	}
 	if err = q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf); err != nil {
-		return err
+		return nil, err
 	}
 	if err = q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf); err != nil {
-		return err
+		return nil, err
 	}
 	//This is a hunch it looks like the kernel does not support this flag for netlink socket
 	//Will need to try if this is honored from a path i did not see af_netlink.c
@@ -159,7 +159,7 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 		Linger: 0,
 	}
 	if err = syscall.SetsockoptLinger(fd, syscall.SOL_SOCKET, syscall.SO_LINGER, lingerconf); err != nil {
-		return err
+		return nil, err
 	}
 	q.queueHandle = nfqHandle
 	return nfqHandle, nil
