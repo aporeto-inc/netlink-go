@@ -65,7 +65,7 @@ func TestNFlogUnbind(t *testing.T) {
 				Convey("When I try to unbind a socket, then I expect the buffer to be populated", func() {
 					mockSyscalls.EXPECT().Sendto(5, gomock.Any(), 0, gomock.Any()).Times(1)
 					mockSyscalls.EXPECT().Recvfrom(5, buf, 0).Times(1).Return(15, nil, nil)
-					newNflog.NFlogUnbind()
+					So(newNflog.NFlogUnbind(), ShouldBeNil)
 				})
 			})
 		})
@@ -102,12 +102,12 @@ func TestNFlogBind(t *testing.T) {
 				Convey("When I try to unbind a socket, then I should the buffer to be populated", func() {
 					mockSyscalls.EXPECT().Sendto(5, gomock.Any(), 0, gomock.Any()).Times(1)
 					mockSyscalls.EXPECT().Recvfrom(5, unbindbuf, 0).Times(1).Return(15, nil, nil)
-					newNflog.NFlogUnbind()
+					So(newNflog.NFlogUnbind(), ShouldBeNil)
 
 					Convey("When I try to bind a socket, then I should the buffer to be populated", func() {
 						mockSyscalls.EXPECT().Sendto(5, gomock.Any(), 0, gomock.Any()).Times(1)
 						mockSyscalls.EXPECT().Recvfrom(5, bindbuf, 0).Times(1).Return(15, nil, nil)
-						newNflog.NFlogBind()
+						So(newNflog.NFlogBind(), ShouldBeNil)
 					})
 				})
 			})

@@ -31,7 +31,7 @@ func (r *NflMsgConfigMode) ToWireFormat() []byte {
 
 	buf := make([]byte, SizeofMsgConfigMode)
 	binary.BigEndian.PutUint32(buf, r.copyRange)
-	buf[4] = byte(r.copyMode)
+	buf[4] = r.copyMode
 
 	return buf
 }
