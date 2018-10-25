@@ -2,7 +2,6 @@ package nfqueue
 
 import (
 	"encoding/binary"
-
 	"unsafe"
 
 	"go.aporeto.io/netlink-go/common"

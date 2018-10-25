@@ -5,9 +5,8 @@ import (
 	"net"
 	"testing"
 
-	"go.aporeto.io/netlink-go/common"
-
 	. "github.com/smartystreets/goconvey/convey"
+	"go.aporeto.io/netlink-go/common"
 )
 
 func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) error {
