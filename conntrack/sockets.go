@@ -86,5 +86,5 @@ func (sh *SockHandles) getLocalAddress() syscall.SockaddrNetlink {
 }
 
 func (sh *SockHandles) close() {
-	sh.Syscalls.Close(sh.fd)
+	sh.Syscalls.Close(sh.fd) // nolint
 }

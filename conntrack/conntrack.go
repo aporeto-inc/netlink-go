@@ -7,10 +7,9 @@ import (
 	"net"
 	"syscall"
 
+	"github.com/vishvananda/netlink"
 	"go.aporeto.io/netlink-go/common"
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
-
-	"github.com/vishvananda/netlink"
 )
 
 // NewHandle which returns interface which implements Conntrack table get/set/flush
@@ -182,7 +181,7 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
 	nfgenTupleDstPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, int(dstPort.Length()))
 
-	buf := make([]byte, 3*int(common.SizeofNfAttr)+int(common.SizeofNfGenMsg)+2*int(common.NfaLength(uint16(common.SizeOfValue32)))+2*int(common.NfaLength(uint16(common.SizeOfValue16)))+int(common.NfaLength(uint16(common.SizeOfValue8))))
+	buf := make([]byte, 3*int(common.SizeofNfAttr)+int(common.SizeofNfGenMsg)+2*int(common.NfaLength(uint16(common.SizeOfValue32)))+2*int(common.NfaLength(common.SizeOfValue16))+int(common.NfaLength(uint16(common.SizeOfValue8))))
 	copyIndex := nfgen.ToWireFormatBuf(buf)
 	copyIndex += nfgenTupleOrigAttr.ToWireFormatBuf(buf[copyIndex:])
 	copyIndex += nfgenTupleIPAttr.ToWireFormatBuf(buf[copyIndex:])

@@ -109,12 +109,12 @@ func CreateAndStartNfQueue(ctx context.Context, queueID uint16, maxPacketsInQueu
 		return nil, fmt.Errorf("Error binding to queue: %v ", err)
 	}
 	if err := queuingHandle.NfqSetMode(NfqnlCopyPacket, packetSize); err != nil {
-		queuingHandle.NfqDestroyQueue()
+		queuingHandle.NfqDestroyQueue() // nolint
 		queuingHandle.NfqClose()
 		return nil, fmt.Errorf("Unable to set packets copy mode: %v ", err)
 	}
 	if err := queuingHandle.NfqSetQueueMaxLen(maxPacketsInQueue); err != nil {
-		queuingHandle.NfqDestroyQueue()
+		queuingHandle.NfqDestroyQueue() // nolint
 		queuingHandle.NfqClose()
 		return nil, fmt.Errorf("Unable to set max packets in queue: %v ", err)
 	}
@@ -143,16 +143,24 @@ func (q *NfQueue) NfqOpen() (SockHandle, error) {
 	}
 	opt := 1
 	sockrcvbuf := 500 * int(common.NfnlBuffSize)
-	q.Syscalls.SetsockoptInt(fd, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt)
-	q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf)
-	q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf)
+	if err = q.Syscalls.SetsockoptInt(fd, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt); err != nil {
+		return err
+	}
+	if err = q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_RCVBUF, sockrcvbuf); err != nil {
+		return err
+	}
+	if err = q.Syscalls.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, sockrcvbuf); err != nil {
+		return err
+	}
 	//This is a hunch it looks like the kernel does not support this flag for netlink socket
 	//Will need to try if this is honored from a path i did not see af_netlink.c
 	lingerconf := &syscall.Linger{
 		Onoff:  1,
 		Linger: 0,
 	}
-	syscall.SetsockoptLinger(fd, syscall.SOL_SOCKET, syscall.SO_LINGER, lingerconf)
+	if err = syscall.SetsockoptLinger(fd, syscall.SOL_SOCKET, syscall.SO_LINGER, lingerconf); err != nil {
+		return err
+	}
 	q.queueHandle = nfqHandle
 	return nfqHandle, nil
 }
@@ -183,7 +191,7 @@ func (qh *NfqSockHandle) getLocalAddress() syscall.SockaddrNetlink {
 }
 
 func (qh *NfqSockHandle) close() {
-	qh.Syscalls.Close(qh.fd)
+	qh.Syscalls.Close(qh.fd) // nolint
 }
 
 //recv --- private function to receive message on the socket corresponding to this queue.

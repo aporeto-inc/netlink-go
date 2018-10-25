@@ -249,7 +249,9 @@ func (nl *NfLog) parseLog(buffer []byte) error {
 		reader := bytes.NewReader(buffer)
 
 		var header syscall.NlMsghdr
-		binary.Read(reader, binary.LittleEndian, &header)
+		if err := binary.Read(reader, binary.LittleEndian, &header); err != nil {
+			return err
+		}
 
 		msgLen := header.Len
 
@@ -274,14 +276,15 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 	reader := bytes.NewReader(buffer)
 
 	var header nflogHeader
-	binary.Read(reader, binary.LittleEndian, &header)
+	if err := binary.Read(reader, binary.LittleEndian, &header); err != nil {
+		return err
+	}
 
 	var m NfPacket
 
 	var tlvHeader nflogTlv
 	for reader.Len() != 0 {
-		err := binary.Read(reader, binary.LittleEndian, &tlvHeader)
-		if err != nil {
+		if err := binary.Read(reader, binary.LittleEndian, &tlvHeader); err != nil {
 			return err
 		}
 
@@ -290,11 +293,15 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 		switch tlvHeader.Type {
 		case NFULA_PREFIX:
 			payload := make([]byte, NfaAlign16(payloadLen))
-			reader.Read(payload)
+			if _, err := reader.Read(payload); err != nil {
+				return err
+			}
 			m.Prefix = string(payload[:payloadLen-1])
 		case NFULA_PAYLOAD:
 			payload := make([]byte, NfaAlign16(payloadLen))
-			reader.Read(payload)
+			if _, err := reader.Read(payload); err != nil {
+				return err
+			}
 			ipPacket, err := packet.New(packet.PacketTypeNetwork, payload, "", false)
 			if err != nil {
 				return err
@@ -322,7 +329,9 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 			}, nil)
 
 		default:
-			reader.Seek(int64(NfaAlign16(payloadLen)), io.SeekCurrent)
+			if _, err := reader.Seek(int64(NfaAlign16(payloadLen)), io.SeekCurrent); err != nil {
+				return err
+			}
 		}
 	}
 
