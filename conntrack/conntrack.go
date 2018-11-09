@@ -266,10 +266,5 @@ func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 		Data:   data,
 	}
 
-	err = sh.query(netlinkMsg)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return sh.query(netlinkMsg)
 }
