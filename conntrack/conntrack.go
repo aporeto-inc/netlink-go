@@ -256,6 +256,7 @@ func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 
 func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 	sh, err := h.open()
+	defer sh.close()
 	if err != nil {
 		return err
 	}
@@ -265,11 +266,5 @@ func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {
 		Data:   data,
 	}
 
-	err = sh.query(netlinkMsg)
-	if err != nil {
-		return err
-	}
-
-	sh.close()
-	return nil
+	return sh.query(netlinkMsg)
 }
