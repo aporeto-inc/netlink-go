@@ -31,16 +31,6 @@ func BindAndListenForLogs(groups []uint16, packetSize uint32, callback func(*NfP
 		return nil, fmt.Errorf("Error opening NFLog handle: %v ", err)
 	}
 
-	if err := nflHandle.NFlogUnbind(); err != nil {
-		nflHandle.NFlogClose()
-		return nil, fmt.Errorf("Error unbinding existing NFLog handler from AfInet protocol family: %v ", err)
-	}
-
-	if err := nflHandle.NFlogBind(); err != nil {
-		nflHandle.NFlogClose()
-		return nil, fmt.Errorf("Error binding to AfInet protocol family: %v ", err)
-	}
-
 	if err := nflHandle.NFlogBindGroup(groups, callback, errorCallback); err != nil {
 		nflHandle.NFlogClose()
 		return nil, fmt.Errorf("Error binding to nflog group: %v ", err)
@@ -223,7 +213,6 @@ func (nl *NfLog) ReadLogs() {
 
 	for {
 		s, _, err := nl.Syscalls.Recvfrom(nl.Socket.getFd(), buffer, 0)
-
 		if err != nil {
 			if nl.errorCallback != nil {
 				nl.errorCallback(fmt.Errorf("Netlink error %v", err))
