@@ -145,3 +145,10 @@ const (
 	ENCRYPTED = 1
 	DECRYPTED = 2
 )
+
+// Padded attribute lengths
+const (
+	PROTO_NUM_LEN      = 5
+	PROTO_SRC_PORT_LEN = 6
+	PROTO_DST_PORT_LEN = 6
+)

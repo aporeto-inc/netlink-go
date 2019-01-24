@@ -1,39 +1,12 @@
 package conntrack
 
 import (
-	"fmt"
-	"net"
 	"testing"
 
 	"go.aporeto.io/netlink-go/common"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-func udpFlowCreate(t *testing.T, flows, srcPort int, dstIP string, dstPort int) error {
-	for i := 0; i < flows; i++ {
-		ServerAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dstIP, dstPort))
-		if err != nil {
-			return err
-		}
-
-		LocalAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("127.0.0.1:%d", srcPort+i))
-		if err != nil {
-			return err
-		}
-
-		Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
-		if err != nil {
-			return err
-		}
-
-		Conn.Write([]byte("Hello World"))
-		if err := Conn.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func TestMark(t *testing.T) {
 
@@ -52,7 +25,7 @@ func TestMark(t *testing.T) {
 
 		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
-			err := udpFlowCreate(t, 5, 2000, "127.0.0.10", 3000)
+			err := UDPFlowCreate(5, 2000, "127.0.0.10", 3000)
 			Convey("Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
@@ -104,7 +77,7 @@ func TestFlush(t *testing.T) {
 
 		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
-			err := udpFlowCreate(t, 5, 2000, "127.0.0.1", 3000)
+			err := UDPFlowCreate(5, 2000, "127.0.0.1", 3000)
 			Convey("Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
