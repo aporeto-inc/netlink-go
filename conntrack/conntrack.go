@@ -33,8 +33,7 @@ func (h *Handles) ConntrackTableList(table netlink.ConntrackTableType) ([]*netli
 // Using vishvananda/netlink and nl packages for flushing entries
 func (h *Handles) ConntrackTableFlush(table netlink.ConntrackTableType) error {
 
-	err := netlink.ConntrackTableFlush(table)
-	return err
+	return netlink.ConntrackTableFlush(table)
 }
 
 // ConntrackTableUpdateMarkForAvailableFlow will update conntrack table mark attribute only if the flow is present
@@ -59,22 +58,20 @@ func (h *Handles) ConntrackTableUpdateMarkForAvailableFlow(flows []*netlink.Conn
 		return entriesUpdated, nil
 	}
 
-	return 0, fmt.Errorf("Entry not present")
+	return -1, fmt.Errorf("Entry not present")
 }
 
 // ConntrackTableUpdateMark will update conntrack table mark attribute
 func (h *Handles) ConntrackTableUpdateMark(ipSrc, ipDst string, protonum uint8, srcport, dstport uint16, newmark uint32) error {
 
-	var mark common.NfValue32
-
 	hdr, data := buildConntrackUpdateRequest(ipSrc, ipDst, protonum, srcport, dstport)
 
+	mark := common.NfValue32{}
 	mark.Set32Value(newmark)
+
 	data = append(data, appendMark(mark, hdr)...)
 
-	err := h.SendMessage(hdr, data)
-
-	return err
+	return h.sendMessage(hdr, data)
 }
 
 // ConntrackTableUpdateLabel will update conntrack table label attribute
@@ -98,7 +95,7 @@ func (h *Handles) ConntrackTableUpdateLabel(table netlink.ConntrackTableType, fl
 			labels.Set32Value(newlabels)
 			data = append(data, appendLabel(labels, hdr)...)
 
-			err := h.SendMessage(hdr, data)
+			err := h.sendMessage(hdr, data)
 			if err != nil {
 				return 0, err
 			}
@@ -178,9 +175,9 @@ func buildConntrackUpdateRequest(ipSrc, ipDst string, protonum uint8, srcport, d
 	nfgenTupleIPV4SrcAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_SRC, int(ipv4ValueSrc.Length()))
 	nfgenTupleIPV4DstAttr := common.BuildNfNestedAttrMsg(CTA_IP_V4_DST, int(ipv4ValueDst.Length()))
 	nfgenTupleProto := common.BuildNfNestedAttrMsg(NLA_F_NESTED|CTA_TUPLE_PROTO, int(SizeOfNestedTupleProto))
-	nfgenTupleProtoNum := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, int(protoNum.Length()))
-	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, int(srcPort.Length()))
-	nfgenTupleDstPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, int(dstPort.Length()))
+	nfgenTupleProtoNum := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_NUM, PROTO_NUM_LEN)
+	nfgenTupleSrcPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_SRC_PORT, PROTO_SRC_PORT_LEN)
+	nfgenTupleDstPort := common.BuildNfAttrWithPaddingMsg(CTA_PROTO_DST_PORT, PROTO_DST_PORT_LEN)
 
 	buf := make([]byte, 3*int(common.SizeofNfAttr)+int(common.SizeofNfGenMsg)+2*int(common.NfaLength(uint16(common.SizeOfValue32)))+2*int(common.NfaLength(uint16(common.SizeOfValue16)))+int(common.NfaLength(uint16(common.SizeOfValue8))))
 	copyIndex := nfgen.ToWireFormatBuf(buf)
@@ -246,12 +243,6 @@ func appendProtoInfo(hdr *syscall.NlMsghdr) []byte {
 	data = append(data, flagsReply.ToWireFormat()...)
 
 	return data
-}
-
-// SendMessage -- To send and receive netlink messages
-// calls the private function sendmessage
-func (h *Handles) SendMessage(hdr *syscall.NlMsghdr, data []byte) error {
-	return h.sendMessage(hdr, data)
 }
 
 func (h *Handles) sendMessage(hdr *syscall.NlMsghdr, data []byte) error {

@@ -129,7 +129,7 @@ func BuildNfNestedAttrMsg(attrType uint16, dataLen int) *NfAttr {
 //dataLen -- Length of the attribute
 func BuildNfAttrWithPaddingMsg(attrType uint16, dataLen int) *NfAttr {
 	return &NfAttr{
-		nfaLen:  uint16(dataLen) + SizeofNfAttr,
+		nfaLen:  uint16(dataLen),
 		nfaType: attrType,
 	}
 }
