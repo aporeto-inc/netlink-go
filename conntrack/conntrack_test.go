@@ -77,7 +77,7 @@ func TestFlush(t *testing.T) {
 
 		Convey("Given I try to create 5 flows", func() {
 			//udpFlows -- 5
-			err := udpFlowCreate(5, 2000, "127.0.0.1", 3000)
+			err := UDPFlowCreate(5, 2000, "127.0.0.1", 3000)
 			Convey("Then I should not get any error", func() {
 				So(err, ShouldBeNil)
 			})
