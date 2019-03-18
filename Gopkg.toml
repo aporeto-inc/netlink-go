@@ -2,10 +2,6 @@
   name = "github.com/vishvananda/netlink"
   revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
 
-[[constraint]]
-  branch = "ipv6"
-  name = "go.aporeto.io/trireme-lib"
-
 [prune]
   go-tests = true
   unused-packages = true
