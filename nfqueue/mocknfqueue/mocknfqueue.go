@@ -207,14 +207,6 @@ func (mr *MockNFQueueMockRecorder) CreateQueue(num, data, errorCallback, private
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQueue", reflect.TypeOf((*MockNFQueue)(nil).CreateQueue), num, data, errorCallback, privateData)
 }
 
-// NfqSetMode mocks base method
-func (m *MockNFQueue) NfqSetMode(mode nfqueue.nfqConfigMode, packetSize uint32) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NfqSetMode", mode, packetSize)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
 // NfqSetMode indicates an expected call of NfqSetMode
 func (mr *MockNFQueueMockRecorder) NfqSetMode(mode, packetSize interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
