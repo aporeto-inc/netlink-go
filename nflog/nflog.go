@@ -290,13 +290,13 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 			}
 
 			if ipPacket != nil {
-				m.SrcIP = ipPacket.SourceAddress
-				m.DstIP = ipPacket.DestinationAddress
+				m.SrcIP = ipPacket.SourceAddress()
+				m.DstIP = ipPacket.DestinationAddress()
 				m.Version = IPVersion
-				m.Protocol = ipPacket.IPProto
-				m.Length = ipPacket.IPTotalLength
-				m.SrcPort = ipPacket.SourcePort
-				m.DstPort = ipPacket.DestinationPort
+				m.Protocol = ipPacket.IPProto()
+				m.Length = ipPacket.IPTotalLen()
+				m.SrcPort = ipPacket.SourcePort()
+				m.DstPort = ipPacket.DestPort()
 			}
 
 			m.Payload = payload[:payloadLen]
