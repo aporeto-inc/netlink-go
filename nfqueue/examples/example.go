@@ -14,13 +14,13 @@ import (
 
 func passNetVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
-	buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
+	buf.QueueHandle.SetVerdict2(1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 
 }
 
 func passVerdict(buf *nfqueue.NFPacket, data interface{}) {
 
-	buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
+	buf.QueueHandle.SetVerdict2(1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 
 }
 

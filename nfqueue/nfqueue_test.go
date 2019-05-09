@@ -17,7 +17,7 @@ var isCalled int
 
 func passVerdict(buf *NFPacket, data interface{}) {
 	if isCalled < 4 {
-		buf.QueueHandle.SetVerdict2(uint32(buf.QueueHandle.QueueNum), 1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
+		buf.QueueHandle.SetVerdict2(1, 11, uint32(len(buf.Buffer)), uint32(buf.ID), buf.Buffer)
 		isCalled++
 	}
 	os.Exit(0)

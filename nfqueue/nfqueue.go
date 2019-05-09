@@ -11,6 +11,11 @@ import (
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
+//PacketHandler interface is used to define the verdict on the packet
+type PacketHandler interface {
+	SetVerdict2(verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte)
+}
+
 //General structure of all message passed to nfnetlink for netlink.h in kernel
 /* ========================================================================
  *         Netlink Messages and Attributes Interface (As Seen On lxr)
@@ -42,8 +47,7 @@ import (
 type NFPacket struct {
 	Buffer      []byte
 	Mark        int
-	Xbuffer     []byte
-	QueueHandle *NfQueue
+	QueueHandle PacketHandler
 	ID          int
 }
 
@@ -335,7 +339,7 @@ func (q *NfQueue) NfqSetQueueMaxLen(queuelen uint32) error {
 }
 
 //SetVerdict -- SetVerdict on the packet -- accept/drop
-func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, packetID uint32, packet []byte) {
+func (q *NfQueue) SetVerdict(verdict uint32, packetLen uint32, packetID uint32, packet []byte) {
 	hdr := common.BuildNlMsgHeader(common.NfqnlMsgVerdict, common.NlmFRequest, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 	configVerdict := NfqMsgVerdictHdr{
@@ -374,7 +378,7 @@ func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, 
 }
 
 //SetVerdict2 -- SetVerdict on the packet -- accept/drop also mark
-func (q *NfQueue) SetVerdict2(queueNum uint32, verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte) {
+func (q *NfQueue) SetVerdict2(verdict uint32, mark uint32, packetLen uint32, packetID uint32, packet []byte) {
 	hdr := common.BuildNlMsgHeader(common.NfqnlMsgVerdict, common.NlmFRequest, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 
