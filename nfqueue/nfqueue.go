@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 
@@ -60,6 +61,9 @@ type NfQueue struct {
 	nfattrresponse      map[int]*common.NfAttrResponsePayload
 	hdrSlice            []byte
 	Syscalls            syscallwrappers.Syscalls
+	acceptedPackets     uint64
+	droppedPackets      uint64
+	processedPackets    uint64
 }
 
 var native binary.ByteOrder
@@ -336,6 +340,11 @@ func (q *NfQueue) NfqSetQueueMaxLen(queuelen uint32) error {
 
 //SetVerdict -- SetVerdict on the packet -- accept/drop
 func (q *NfQueue) SetVerdict(queueNum uint32, verdict uint32, packetLen uint32, packetID uint32, packet []byte) {
+	if verdict == 1 {
+		atomic.AddUint64(&q.acceptedPackets, 1)
+	} else {
+		atomic.AddUint64(&q.droppedPackets, 1)
+	}
 	hdr := common.BuildNlMsgHeader(common.NfqnlMsgVerdict, common.NlmFRequest, 0)
 	nfgen := common.BuildNfgenMsg(syscall.AF_UNSPEC, common.NFNetlinkV0, q.QueueNum, hdr)
 	configVerdict := NfqMsgVerdictHdr{
@@ -483,7 +492,7 @@ func (q *NfQueue) ProcessPackets(ctx context.Context) {
 			}
 
 			packetid, mark, packet := GetPacketInfo(attr)
-
+			atomic.AddUint64(&q.processedPackets, 1)
 			q.callback(&NFPacket{
 				Buffer:      packet,
 				Mark:        mark,
