@@ -1,28 +1,46 @@
 language: go
 sudo: required
-dist: trusty
+dist: bionic
 
 go_import_path: go.aporeto.io/netlink-go
 
-go:
- - 1.9.2
+matrix:
+  include:
+  - go: "1.13.x"
+  - go: "1.14.x"
+  - go: master
+  allow_failures:
+  - go: "1.14.x"
+  - go: master
+  fast_finish: true
 
 env:
   global:
+    - GOPRIVATE="go.aporeto.io,github.com/aporeto-inc"
+    - GO111MODULE=auto
     - TOOLS_CMD=golang.org/x/tools/cmd
     - PATH=$GOROOT/bin:$PATH
     - SUDO_PERMITTED=1
 
 before_install:
-  - go get -u gopkg.in/alecthomas/gometalinter.v2
-  - gometalinter.v2 --install
-  - go get -u github.com/golang/dep/cmd/dep
+  - GO111MODULE=off go get -u gopkg.in/alecthomas/gometalinter.v2
+  - GO111MODULE=off gometalinter.v2 --install
 
 install:
-  - dep ensure
-  - dep status
   - sudo apt-get install conntrack
+  - go mod download
+  - go list -m all || true
+
+## go modules hack -
+## gometalinter does not understand the go modules package cache and
+## fails to lint. So treat it like a non module library for linting. To do this,
+## we load all the dependent modules into a vendor folder then flatten
+## that into the standard GOROOT for linting
+## TODO - gometalinter is deprecated. Use https://github.com/golangci/golangci-lint
 
 script:
-  - gometalinter.v2 --vendor --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
+  - go mod vendor
+  - cp -pr ./vendor/* $GOPATH/src/
+  - rm -rf ./vendor
+  - GO111MODULE=off gometalinter.v2 --vendor --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=structcheck --enable=deadcode --enable=ineffassign --enable=gotype --enable=goimports --enable=varcheck --enable=interfacer --enable=goconst --enable=gosimple --enable=staticcheck --enable=unused --enable=misspell --deadline=5m -e mock ./...
   - sudo -E env "PATH=$PATH" go test ./...

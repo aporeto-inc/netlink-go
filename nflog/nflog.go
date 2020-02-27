@@ -11,7 +11,7 @@ import (
 
 	"go.aporeto.io/netlink-go/common"
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
-	"go.aporeto.io/trireme-lib/controller/pkg/packet"
+	"go.aporeto.io/trireme-lib/v11/controller/pkg/packet"
 )
 
 // NewNFLog -- Create a new Nflog handle
