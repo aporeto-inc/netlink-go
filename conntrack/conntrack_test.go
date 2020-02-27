@@ -3,7 +3,7 @@ package conntrack
 import (
 	"testing"
 
-	"go.aporeto.io/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

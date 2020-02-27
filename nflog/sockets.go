@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"go.aporeto.io/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 func (sh *SockHandles) query(msg *syscall.NetlinkMessage) error {

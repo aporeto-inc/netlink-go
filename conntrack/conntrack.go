@@ -7,8 +7,8 @@ import (
 	"net"
 	"syscall"
 
-	"go.aporeto.io/netlink-go/common"
-	"go.aporeto.io/netlink-go/common/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 
 	"github.com/vishvananda/netlink"
 )

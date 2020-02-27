@@ -4,7 +4,7 @@ import (
 	"log"
 	"runtime"
 
-	"go.aporeto.io/netlink-go/conntrack"
+	"github.com/aporeto-inc/netlink-go/conntrack"
 )
 
 func main() {

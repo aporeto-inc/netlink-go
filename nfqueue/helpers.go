@@ -5,7 +5,7 @@ import (
 
 	"unsafe"
 
-	"go.aporeto.io/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 //GetPacketInfo -- Extract packet info from netlink response

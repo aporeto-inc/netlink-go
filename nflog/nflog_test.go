@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.aporeto.io/netlink-go/common/syscallwrappers"
+	"github.com/aporeto-inc/netlink-go/common/syscallwrappers"
 )
 
 func TestNFlogOpen(t *testing.T) {

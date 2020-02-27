@@ -4,7 +4,7 @@ import (
 	"context"
 	"syscall"
 
-	"go.aporeto.io/netlink-go/common"
+	"github.com/aporeto-inc/netlink-go/common"
 )
 
 //Verdict -- Interface exposing functionality to get a copy of the received packet and set a verdict
