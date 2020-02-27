@@ -2,7 +2,7 @@ platform: linux
 
 inputs:
 - name: src
-  path: go/src/go.aporeto.io/netlink-go
+  path: go/src/github.com/aporeto-inc/netlink-go
 
 outputs:
 - name: docker
@@ -14,8 +14,8 @@ run:
   - -ec
   - |
     PS4='${LINENO}: '
-    
-    cd go/src/go.aporeto.io/netlink-go
+
+    cd go/src/github.com/aporeto-inc/netlink-go
     git branch
     commit_sha=$(git rev-parse HEAD)
     cd -
