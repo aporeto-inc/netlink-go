@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.aporeto.io/netlink-go/common"
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
@@ -25,7 +26,7 @@ func TestNFlogOpen(t *testing.T) {
 
 			mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 			mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-
+			mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 			nfSockHandle, err := newNflog.NFlogOpen()
 
 			Convey("Then I should not see any error", func() {
@@ -54,7 +55,7 @@ func TestNFlogUnbind(t *testing.T) {
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_NETFILTER).Times(1).Return(5, nil)
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
-
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				nfSockHandle, err := newNflog.NFlogOpen()
 
 				Convey("Then I should not get any error", func() {
@@ -92,6 +93,7 @@ func TestNFlogBind(t *testing.T) {
 
 			Convey("When I try to open a socket", func() {
 				mockSyscalls.EXPECT().Bind(5, gomock.Any()).Times(1).Return(nil)
+				mockSyscalls.EXPECT().SetsockoptInt(5, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, 1).Times(1)
 				nfSockHandle, err := newNflog.NFlogOpen()
 
 				Convey("Then I should not get any error", func() {
