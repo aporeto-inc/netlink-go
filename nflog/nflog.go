@@ -63,6 +63,12 @@ func (nl *NfLog) NFlogOpen() (NFLog, error) {
 	if err != nil {
 		return nil, err
 	}
+	// when the traffic is high its easy to get the ENOBUFS as the socket buffer size max is 200kb.
+	// ignore them unless we want to increase the buffer size for logging.
+	// the only down side is we are ignoring logs but with this error anyway we don't log.
+	opt := 1
+	nl.Syscalls.SetsockoptInt(fd, common.SolNetlink, syscall.NETLINK_NO_ENOBUFS, opt)
+
 	nl.Socket = sh
 	nl.NflogHandle = nl
 
