@@ -303,6 +303,7 @@ func (nl *NfLog) parsePacket(buffer []byte) error {
 				m.Length = ipPacket.IPTotalLen()
 				m.SrcPort = ipPacket.SourcePort()
 				m.DstPort = ipPacket.DestPort()
+				m.ID = ipPacket.ID()
 			}
 
 			m.Payload = payload[:payloadLen]

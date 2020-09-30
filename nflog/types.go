@@ -79,6 +79,7 @@ type IPLayer struct {
 	Version  uint8
 	Protocol uint8
 	Length   uint16
+	ID       string
 }
 
 // Ports -- Generic struct for TCP and UDP ports
