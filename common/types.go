@@ -94,6 +94,92 @@ type SockHandles struct {
 	lsa        syscall.SockaddrNetlink
 }
 
+/*
+struct inet_diag_req_v2 {
+        __u8    sdiag_family;
+        __u8    sdiag_protocol;
+        __u8    idiag_ext;
+        __u8    pad;
+        __u32   idiag_states;
+        struct inet_diag_sockid id;
+};
+
+*/
+
+type be16 [2]byte
+type be32 [4]byte
+
+// InetDiagSockId is the inet_diag_sockid struct as defined in inet_diag.h
+//
+// struct inet_diag_sockid {
+// 	__be16  idiag_sport;
+// 	__be16  idiag_dport;
+// 	__be32  idiag_src[4];
+// 	__be32  idiag_dst[4];
+// 	__u32   idiag_if;
+// 	__u32   idiag_cookie[2];
+// #define INET_DIAG_NOCOOKIE (~0U)
+// };
+//
+type InetDiagSockId struct {
+	IDiagSport  be16
+	IDiagDport  be16
+	IDiagSrc    [4]be32
+	IDiagDst    [4]be32
+	IDiagIf     uint32
+	IDiagCookie [2]uint32
+}
+
+// InetDiagReqV2 is the inet_diag_req_v2 struct as defined in inet_diag.h
+//
+// struct inet_diag_req_v2 {
+// 	__u8    sdiag_family;
+// 	__u8    sdiag_protocol;
+// 	__u8    idiag_ext;
+// 	__u8    pad;
+// 	__u32   idiag_states;
+// 	struct inet_diag_sockid id;
+// };
+//
+type InetDiagReqV2 struct {
+	SDiagFamily   uint8
+	SDiagProtocol uint8
+	IDiagExt      uint8
+	Pad           uint8
+	IDiagStates   uint32
+	Id            InetDiagSockId
+}
+
+// InetDiagMsg is the inet_diag_msg struct as defined in inet_diag.h
+//
+// struct inet_diag_msg {
+// 	__u8    idiag_family;
+// 	__u8    idiag_state;
+// 	__u8    idiag_timer;
+// 	__u8    idiag_retrans;
+
+// 	struct inet_diag_sockid id;
+
+// 	__u32   idiag_expires;
+// 	__u32   idiag_rqueue;
+// 	__u32   idiag_wqueue;
+// 	__u32   idiag_uid;
+// 	__u32   idiag_inode;
+// };
+//
+type InetDiagMsg struct {
+	IDiagFamily  uint8
+	IDiagState   uint8
+	IDiagTimer   uint8
+	IDiagRetrans uint8
+	Id           InetDiagSockId
+	IDiagExpires uint32
+	IDiagRqueue  uint32
+	IDiagWqueue  uint32
+	IDiagUid     uint32
+	IDiagInode   uint32
+}
+
 //NfqGenMsg -- the nfgen msg structure
 //nfGenFamily -- Family
 //version -- netlink version

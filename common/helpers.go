@@ -78,6 +78,36 @@ func BuildNfgenMsg(family int, version uint8, resID uint16, n *syscall.NlMsghdr)
 	}
 }
 
+func BuildInetDiagReqV2(family uint8, protocol uint8, states uint32, n *syscall.NlMsghdr) *InetDiagReqV2 {
+	n.Len = NlMsgLength(SizeofInetDiagReqV2)
+	return &InetDiagReqV2{
+		SDiagFamily:   family,
+		SDiagProtocol: protocol,
+		IDiagStates:   states,
+	}
+}
+
+func ParseInetDiagMsg(data []byte) (*InetDiagMsg, error) {
+	if len(data) < SizeofInetDiagReqV2 {
+		return nil, fmt.Errorf("netlink message is not of inet_diag_msg size (%d), but %d", SizeofInetDiagMsg, len(data))
+	}
+	buf := make([]byte, len(data))
+	copy(buf, data)
+	return (*InetDiagMsg)(unsafe.Pointer(&buf[0])), nil
+}
+
+//ToWireFormat -- Convert NfqGenMsg to byte slice
+func (r *InetDiagReqV2) ToWireFormat() []byte {
+	buf := make([]byte, SizeofInetDiagReqV2)
+	copy(buf, (*(*[SizeofInetDiagReqV2]byte)(unsafe.Pointer(r)))[:])
+	return buf
+}
+
+// Length returns the number of bytes of the request
+func (r *InetDiagReqV2) Length() uint32 {
+	return SizeofInetDiagReqV2
+}
+
 //BuildNfAttrMsg -- Build nfattr message
 //length -- length of the attr payload -- unused
 //attrType -- Type of attr being added

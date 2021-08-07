@@ -45,6 +45,14 @@ const (
 	//NFLOG - Netfilter NFLog message types
 	NfnlNFLog msgTypes = (NFNL_SUBSYS_ULOG << 8) | NFULNL_MSG_CONFIG
 
+	// DiagSockDiagByFamily is SOCK_DIAG_BY_FAMILY from sock_diag.h
+	DiagSockDiagByFamily msgTypes = 20
+
+	// SizeofInetDiagReqV2 is the size of the inet_diag_req_v2 struct
+	SizeofInetDiagReqV2 = 0x38
+
+	SizeofInetDiagMsg = 76
+
 	//unexported max
 	nfqaMax nfqaAttr = 0xb
 
