@@ -22,19 +22,22 @@ func init() {
 	}
 }
 
-type Diag struct {
+// InetDiag holds the state for running an inet_diag_req_v2
+type InetDiag struct {
 	syswrap  syscallwrappers.Syscalls
 	fd       int
 	sockaddr syscall.SockaddrNetlink
 }
 
-func NewDiag() (*Diag, error) {
+// NewInetDiag establishes state for running an inet_diag_req_v2 - including creating a socket.
+// NOTE: you **must** call `Close` on the returned InetDiag in order to release the fd for the socket.
+func NewInetDiag() (*InetDiag, error) {
 	syswrap := syscallwrappers.NewSyscalls()
 	fd, err := syswrap.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_INET_DIAG)
 	if err != nil {
 		return nil, err
 	}
-	return &Diag{
+	return &InetDiag{
 		syswrap: syswrap,
 		fd:      fd,
 		sockaddr: syscall.SockaddrNetlink{
@@ -45,14 +48,29 @@ func NewDiag() (*Diag, error) {
 	}, nil
 }
 
-func (d *Diag) Close() {
+// Close closes the fd for the socket
+func (d *InetDiag) Close() {
 	d.syswrap.Close(d.fd)
 }
 
-func (d *Diag) GetConnections() ([]Connection, error) {
+// GetConnections will run an inet_diag_req_v2 for the specified family and protocol.
+// If no states are given, it is being assumed that the caller is asking for all states.
+// If states are given, then all connections are being returned filtered by all the specified states
+func (d *InetDiag) GetConnections(family AddressFamily, protocol IPProtocol, states ...ConnectionState) ([]Connection, error) {
+	var statesArg uint32
+	if len(states) > 0 {
+		var tmp uint32
+		for _, state := range states {
+			tmp |= (1 << uint32(state))
+		}
+		statesArg = tmp
+	} else {
+		statesArg = tcp_all
+	}
+	fmt.Printf("%x\n", statesArg)
 	// build request
 	hdr := common.BuildNlMsgHeader(common.DiagSockDiagByFamily, common.NlmFlags(syscall.NLM_F_DUMP)|common.NlmFRequest, 0)
-	req := common.BuildInetDiagReqV2(syscall.AF_INET, syscall.IPPROTO_TCP, TCP_ALL, hdr)
+	req := common.BuildInetDiagReqV2(uint8(family), uint8(protocol), statesArg, hdr)
 	reqNlmsg := &syscall.NetlinkMessage{
 		Header: *hdr,
 		Data:   req.ToWireFormat(),
@@ -121,7 +139,7 @@ func (d *Diag) GetConnections() ([]Connection, error) {
 	return ret, nil
 }
 
-func (d *Diag) send(msg *syscall.NetlinkMessage) error {
+func (d *InetDiag) send(msg *syscall.NetlinkMessage) error {
 	buf := make([]byte, syscall.SizeofNlMsghdr+len(msg.Data))
 	binary.LittleEndian.PutUint32(buf[0:4], msg.Header.Len)
 	native.PutUint16(buf[4:6], msg.Header.Type)
@@ -132,7 +150,7 @@ func (d *Diag) send(msg *syscall.NetlinkMessage) error {
 	return d.syswrap.Sendto(d.fd, buf, 0, &d.sockaddr)
 }
 
-func (d *Diag) receive() ([]syscall.NetlinkMessage, error) {
+func (d *InetDiag) receive() ([]syscall.NetlinkMessage, error) {
 	buf := make([]byte, syscall.Getpagesize())
 	len, _, err := d.syswrap.Recvfrom(d.fd, buf, 0)
 	if err != nil {
@@ -145,16 +163,19 @@ func (d *Diag) receive() ([]syscall.NetlinkMessage, error) {
 	return syscall.ParseNetlinkMessage(buf)
 }
 
+// ConnectionState is a type to hold the state of a connection
 type ConnectionState uint8
 
+// String converts a connection state into a user-readable string
 func (s ConnectionState) String() string {
-	str, ok := tcpStatesMap[uint8(s)]
+	str, ok := tcpStatesMap[s]
 	if !ok {
 		return "unknown"
 	}
 	return str
 }
 
+// Connection returns a golang usable connection information of an inet_diag_msg as returned by an inet_diag_req_v2.
 type Connection struct {
 	Source          net.IP
 	Destination     net.IP
@@ -165,6 +186,7 @@ type Connection struct {
 	State           ConnectionState
 }
 
+// String returns a user-readable string of a connecion object
 func (c Connection) String() string {
 	return fmt.Sprintf("Src:%s:%d Dst:%s:%d UID:%d Inode:%d State:%s",
 		c.Source, c.SourcePort,
@@ -179,10 +201,9 @@ func port(bytes [2]byte) uint16 {
 	return binary.BigEndian.Uint16([]byte{bytes[0], bytes[1]})
 }
 
-// netinet/tcp.h
 const (
-	_               = iota
-	TCP_ESTABLISHED = iota
+	_               ConnectionState = iota
+	TCP_ESTABLISHED ConnectionState = iota
 	TCP_SYN_SENT
 	TCP_SYN_RECV
 	TCP_FIN_WAIT1
@@ -196,10 +217,10 @@ const (
 )
 
 const (
-	TCP_ALL = 0xFFF
+	tcp_all uint32 = 0xFFF
 )
 
-var tcpStatesMap = map[uint8]string{
+var tcpStatesMap = map[ConnectionState]string{
 	TCP_ESTABLISHED: "established",
 	TCP_SYN_SENT:    "syn_sent",
 	TCP_SYN_RECV:    "syn_recv",
@@ -212,3 +233,21 @@ var tcpStatesMap = map[uint8]string{
 	TCP_LISTEN:      "listen",
 	TCP_CLOSING:     "closing",
 }
+
+// AddressFamily is the address family type - can be AF_INET or AF_INET6 essentially
+type AddressFamily uint8
+
+const (
+	// AddressFamilyInet is AF_INET
+	AddressFamilyInet AddressFamily = AddressFamily(syscall.AF_INET)
+	// AddressFamilyInet6 is AF_INET6
+	AddressFamilyInet6 AddressFamily = AddressFamily(syscall.AF_INET6)
+)
+
+// IPProtocol is the protocol type - can be only IPPROTO_TCP right now
+type IPProtocol uint8
+
+const (
+	// IPProtocolTCP is IPPROTO_TCP
+	IPProtocolTCP IPProtocol = IPProtocol(syscall.IPPROTO_TCP)
+)
