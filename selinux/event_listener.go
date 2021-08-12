@@ -2,8 +2,8 @@ package selinux
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -11,27 +11,21 @@ import (
 	"go.aporeto.io/netlink-go/common/syscallwrappers"
 )
 
-var native binary.ByteOrder
-
-func init() {
-	var x uint32 = 0x01020304
-	if *(*byte)(unsafe.Pointer(&x)) == 0x01 {
-		native = binary.BigEndian
-	} else {
-		native = binary.LittleEndian
-	}
-}
-
-// InetDiag holds the state for running an inet_diag_req_v2
+// EventListener holds the state for listening to SELinux event notifications
 type EventListener struct {
-	syswrap  syscallwrappers.Syscalls
-	fd       int
-	sockaddr syscall.SockaddrNetlink
-	cancel   context.CancelFunc
+	syswrap          syscallwrappers.Syscalls
+	fd               int
+	sockaddr         syscall.SockaddrNetlink
+	cancel           context.CancelFunc
+	setenforceMsgCh  chan common.SelnlMsgSetenforce
+	policyloadMsgCh  chan common.SelnlMsgPolicyload
+	errorCounter     uint
+	errorCounterLock sync.RWMutex
 }
 
-// NewInetDiag establishes state for running an inet_diag_req_v2 - including creating a socket.
-// NOTE: you **must** call `Close` on the returned InetDiag in order to release the fd for the socket.
+// NewEventListener establishes state for running an inet_diag_req_v2 - including creating a socket.
+// NOTE: you **must** call `Close` on the returned EventListener in order to release the fd for the socket.
+// Do not use the EventListener again once you called Close.
 func NewEventListener(ctx context.Context) (*EventListener, error) {
 	syswrap := syscallwrappers.NewSyscalls()
 	fd, err := syswrap.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_SELINUX)
@@ -46,6 +40,8 @@ func NewEventListener(ctx context.Context) (*EventListener, error) {
 			Pid:    0,
 			Groups: common.SELNL_GRP_ALL,
 		},
+		setenforceMsgCh: make(chan common.SelnlMsgSetenforce, 10),
+		policyloadMsgCh: make(chan common.SelnlMsgPolicyload, 10),
 	}
 
 	// I don't think we need those, but keeping it here for reference
@@ -89,6 +85,30 @@ func (a *EventListener) Close() {
 		a.cancel()
 	}
 	a.syswrap.Close(a.fd)
+	if a.policyloadMsgCh != nil {
+		close(a.policyloadMsgCh)
+		a.policyloadMsgCh = nil
+	}
+	if a.setenforceMsgCh != nil {
+		close(a.setenforceMsgCh)
+		a.setenforceMsgCh = nil
+	}
+}
+
+// PolicyLoadMsgCh receives SELNL_MSG_POLICYLOAD messages
+func (a *EventListener) PolicyLoadMsgCh() <-chan common.SelnlMsgPolicyload {
+	return a.policyloadMsgCh
+}
+
+// SetenforceMsgCh receives SELNL_MSG_SETENFORCE messages
+func (a *EventListener) SetenforceMsgCh() <-chan common.SelnlMsgSetenforce {
+	return a.setenforceMsgCh
+}
+
+func (a *EventListener) ErrorCount() uint {
+	a.errorCounterLock.RLock()
+	defer a.errorCounterLock.RUnlock()
+	return a.errorCounter
 }
 
 func (a *EventListener) loop(ctx context.Context) {
@@ -99,7 +119,9 @@ func (a *EventListener) loop(ctx context.Context) {
 		default:
 			err := a.receive()
 			if err != nil {
-				fmt.Printf("ERROR: error from netlink recvfrom: %s", err)
+				a.errorCounterLock.Lock()
+				a.errorCounter++
+				a.errorCounterLock.Unlock()
 				continue
 			}
 
@@ -132,12 +154,24 @@ func (a *EventListener) receive() error {
 		buf := make([]byte, len(payload))
 		copy(buf, payload)
 		msg := (*common.SelnlMsgSetenforce)(unsafe.Pointer(&buf[0]))
-		fmt.Printf("received SELNL_MSG_SETENFORCE: %#v\n", msg)
+		if a.setenforceMsgCh != nil {
+			select {
+			case a.setenforceMsgCh <- *msg:
+			default:
+				return fmt.Errorf("failed to send setenforce message")
+			}
+		}
 	case common.SELNL_MSG_POLICYLOAD:
 		buf := make([]byte, len(payload))
 		copy(buf, payload)
 		msg := (*common.SelnlMsgPolicyload)(unsafe.Pointer(&buf[0]))
-		fmt.Printf("received SELNL_MSG_POLICYLOAD: %#v\n", msg)
+		if a.policyloadMsgCh != nil {
+			select {
+			case a.policyloadMsgCh <- *msg:
+			default:
+				return fmt.Errorf("failed to send policyload message")
+			}
+		}
 	default:
 		return fmt.Errorf("unexpected netlink message type 0x%x", hdr.Type)
 	}
