@@ -234,3 +234,13 @@ type NfqNetlinkRequest struct {
 	syscall.NlMsghdr
 	Data []byte
 }
+
+// SelnlMsgSetenforce is the selnl_msg_setenforce struct
+type SelnlMsgSetenforce struct {
+	Val int32
+}
+
+// SelnlMsgPolicyload is the selnl_msg_policyload struct
+type SelnlMsgPolicyload struct {
+	Seqno uint32
+}
